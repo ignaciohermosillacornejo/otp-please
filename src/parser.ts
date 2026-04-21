@@ -8,7 +8,14 @@
 // belt-and-suspenders guard, but ordering makes the intent explicit and
 // robust to future subject-line changes.
 
-export type ServiceKey = 'netflix' | 'netflix-household' | 'disney' | 'max' | 'amazon';
+// Single source of truth for the full set of service keys. `ServiceKey`
+// is DERIVED from this tuple, so adding a new service to the union
+// without also adding it to SERVICE_KEYS is impossible — kv.ts and the
+// dashboard iterate SERVICE_KEYS to cover every ServiceKey, and a
+// drift here would silently omit the new service.
+export const SERVICE_KEYS = ['netflix', 'netflix-household', 'disney', 'max', 'amazon'] as const;
+
+export type ServiceKey = (typeof SERVICE_KEYS)[number];
 
 interface PatternCommon {
   service: ServiceKey;
@@ -57,9 +64,13 @@ export const PATTERNS: readonly Pattern[] = [
     service: 'netflix-household',
     senderMatch: /@account\.netflix\.com$|@mailer\.netflix\.com$/i,
     // No capture group on purpose — household extraction returns the full
-    // URL, which matchEmail reads via `match[0]`.
+    // URL, which matchEmail reads via `match[0]`. The terminator class
+    // is negative (exclude whitespace + HTML delimiters) so the regex
+    // admits any RFC 3986 character Netflix might include in a token
+    // (~, +, !, etc.) without truncating. Real-world terminators in
+    // email bodies are whitespace, quotes, or angle brackets.
     linkRegex:
-      /https:\/\/(?:www\.)?netflix\.com\/account\/(?:travel|update-primary-location)\/[A-Za-z0-9_\-=?&%./]+/,
+      /https:\/\/(?:www\.)?netflix\.com\/account\/(?:travel|update-primary-location)\/[^\s"'<>]+/,
     validForMinutes: 15,
   },
   {
@@ -104,6 +115,12 @@ export const PATTERNS: readonly Pattern[] = [
  * `"evil@attacker.com <legit@account.netflix.com>"` — and we reject it by
  * returning the empty string. `senderMatch` against an empty string
  * never matches, so ambiguous From headers drop.
+ *
+ * Assumption: the caller hands us a `from` that has already been MIME-
+ * decoded (RFC 2047 encoded-words like `=?UTF-8?Q?...?=` resolved). The
+ * email() handler uses `postal-mime`'s `parsed.from.address`, which is
+ * decoded. A caller that fed us a raw RFC 2047 header could bypass the
+ * `@`-in-display-name check by encoding the `@` as `=40` — don't.
  */
 function normalizeFrom(from: string): string {
   const angleIdx = from.indexOf('<');
