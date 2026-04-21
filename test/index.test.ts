@@ -321,11 +321,102 @@ describe('email() handler', () => {
 });
 
 describe('fetch() handler', () => {
-  it('returns 501 Not Implemented (dashboard stub)', async () => {
+  it('GET /healthz returns 200 "ok" text/plain', async () => {
     const { env } = makeEnv();
+    const request = new Request('https://otp.example.com/healthz');
+    const response = await worker.fetch!(request, env, fakeCtx());
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe(
+      'text/plain; charset=utf-8',
+    );
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.text()).toBe('ok');
+  });
+
+  it('GET /api returns 200 application/json with the entries Record', async () => {
+    const { env, kv } = makeEnv();
+    // Seed one service to prove readAllEntries pass-through.
+    const netflixEntry = {
+      type: 'code',
+      service: 'netflix',
+      value: '4242',
+      received_at: '2026-04-20T11:55:00.000Z',
+      valid_until: '2026-04-20T12:10:00.000Z',
+      subject: 'sign-in',
+    };
+    await kv.put('entry:netflix', JSON.stringify(netflixEntry));
+
+    const request = new Request('https://otp.example.com/api');
+    const response = await worker.fetch!(request, env, fakeCtx());
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+
+    const body = (await response.json()) as Record<string, unknown>;
+    expect(body.netflix).toEqual(netflixEntry);
+    // Services with no entry still appear as null slots.
+    expect(body).toHaveProperty('disney', null);
+    expect(body).toHaveProperty('max', null);
+    expect(body).toHaveProperty('amazon', null);
+    expect(body).toHaveProperty('netflix-household', null);
+  });
+
+  it('GET / returns 200 text/html with the dashboard title and CSP header', async () => {
+    const { env } = makeEnv({ DASHBOARD_TITLE: 'Family Codes' });
     const request = new Request('https://otp.example.com/');
     const response = await worker.fetch!(request, env, fakeCtx());
-    expect(response.status).toBe(501);
-    expect(await response.text()).toBe('Not Implemented');
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('content-security-policy')).toMatch(
+      /default-src 'self'/,
+    );
+    expect(response.headers.get('content-security-policy')).toMatch(
+      /cdn\.tailwindcss\.com/,
+    );
+
+    const body = await response.text();
+    expect(body).toContain('<!DOCTYPE html>');
+    expect(body).toContain('Family Codes');
+  });
+
+  it('GET /unknown-path falls through to the dashboard', async () => {
+    const { env } = makeEnv();
+    const request = new Request('https://otp.example.com/unknown-path');
+    const response = await worker.fetch!(request, env, fakeCtx());
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8');
+    const body = await response.text();
+    expect(body).toContain('<!DOCTYPE html>');
+  });
+
+  it('POST / returns 405 Method Not Allowed with Allow: GET', async () => {
+    const { env } = makeEnv();
+    const request = new Request('https://otp.example.com/', { method: 'POST' });
+    const response = await worker.fetch!(request, env, fakeCtx());
+    expect(response.status).toBe(405);
+    expect(response.headers.get('Allow')).toBe('GET');
+  });
+
+  it('GET / serves dashboard content for populated entries (end-to-end smoke)', async () => {
+    const { env, kv } = makeEnv();
+    await kv.put(
+      'entry:netflix',
+      JSON.stringify({
+        type: 'code',
+        service: 'netflix',
+        value: '5555',
+        received_at: '2026-04-20T11:59:00.000Z',
+        valid_until: '2026-04-20T12:14:00.000Z',
+        subject: 'code',
+      }),
+    );
+    const request = new Request('https://otp.example.com/');
+    const response = await worker.fetch!(request, env, fakeCtx());
+    const body = await response.text();
+    expect(body).toContain('data-code="5555"');
+    expect(body).toContain('5555');
   });
 });
