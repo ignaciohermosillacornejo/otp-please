@@ -1,0 +1,36 @@
+From: Max <noreply@max.com>
+To: codes@example.com
+Subject: Your Max verification code
+Date: Sat, 19 Apr 2026 14:12:03 +0000
+Message-ID: <max-signin-001@max.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-max-signin"
+
+--boundary-max-signin
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Use the verification code below to finish signing in to Max:
+
+234567
+
+This code is valid for 15 minutes.
+
+Thanks,
+The Max team
+
+--boundary-max-signin
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+<html><body>
+<p>Hello,</p>
+<p>Use the verification code below to finish signing in to Max:</p>
+<p style="font-size:28px;letter-spacing:6px;">234567</p>
+<p>This code is valid for 15 minutes.</p>
+<p>Thanks,<br>The Max team</p>
+</body></html>
+
+--boundary-max-signin--

@@ -1,0 +1,46 @@
+From: Weekly Digest <newsletter@example.org>
+To: codes@example.com
+Subject: This week in tech: issue #524312
+Date: Sat, 19 Apr 2026 17:00:00 +0000
+Message-ID: <newsletter-524312@example.org>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-newsletter"
+
+--boundary-newsletter
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Hello subscriber,
+
+Welcome to issue #524312 of the Weekly Digest. Here's what caught our
+eye this week:
+
+- Cloudflare announced 678901 new POPs (not really).
+- TypeScript 5.9 hits stable.
+- A new open-source email parser for Workers.
+
+If you no longer wish to receive these emails, you can unsubscribe at
+any time using the link at the bottom.
+
+Thanks for reading!
+The Weekly Digest team
+
+--boundary-newsletter
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+<html><body>
+<p>Hello subscriber,</p>
+<p>Welcome to issue #524312 of the Weekly Digest. Here's what caught
+our eye this week:</p>
+<ul>
+<li>Cloudflare announced 678901 new POPs (not really).</li>
+<li>TypeScript 5.9 hits stable.</li>
+<li>A new open-source email parser for Workers.</li>
+</ul>
+<p>If you no longer wish to receive these emails, you can unsubscribe at
+any time using the link at the bottom.</p>
+<p>Thanks for reading!<br>The Weekly Digest team</p>
+</body></html>
+
+--boundary-newsletter--

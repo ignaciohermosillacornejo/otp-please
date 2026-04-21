@@ -1,0 +1,39 @@
+From: Netflix <info@account.netflix.com>
+To: codes@example.com
+Subject: Your Netflix sign-in code
+Date: Sat, 19 Apr 2026 10:15:22 +0000
+Message-ID: <netflix-signin-001@account.netflix.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-netflix-signin"
+
+--boundary-netflix-signin
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Hi user,
+
+Enter this code to sign in to Netflix:
+
+1234
+
+This code expires in 15 minutes.
+
+If you didn't request this, you can ignore this email.
+
+Thanks,
+The Netflix team
+
+--boundary-netflix-signin
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+<html><body>
+<p>Hi user,</p>
+<p>Enter this code to sign in to Netflix:</p>
+<p style="font-size:32px;font-weight:bold;">1234</p>
+<p>This code expires in 15 minutes.</p>
+<p>If you didn't request this, you can ignore this email.</p>
+<p>Thanks,<br>The Netflix team</p>
+</body></html>
+
+--boundary-netflix-signin--
