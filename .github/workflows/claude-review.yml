@@ -1,0 +1,91 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+jobs:
+  review:
+    # Skip draft PRs, forked PRs, and Dependabot PRs (secrets are unavailable)
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: op://Dev/CLAUDE_CODE_OAUTH_TOKEN/credential
+
+      - name: AI Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Pass GitHub token explicitly to bypass OIDC token exchange,
+          # which rejects pull_request_target events.
+          # See: https://github.com/anthropics/claude-code-action/issues/713
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          track_progress: true
+          use_sticky_comment: true
+          prompt: |
+            Review this PR for the otp-please project.
+
+            Context: otp-please is a Cloudflare Worker that receives forwarded
+            streaming-service verification emails (Netflix, Disney+, Max, Prime
+            Video), extracts OTP codes, stores them in KV, and renders a
+            mobile-first dashboard behind Cloudflare Access for family members.
+            Solo developer, public MIT repo.
+
+            Focus areas:
+            1. Code Quality — Clean code, error handling, readability
+            2. Security — The Worker trusts "forwarded from configured Gmail
+               address" (SPF-pass + smtp.mailfrom match). Verify that logic is
+               sound and that regex matching for forwarder identity is tight.
+               Flag any way a non-trusted sender could smuggle mail in.
+            3. Cloudflare Workers best practices — bindings usage, no global
+               mutable state, proper streaming / body handling, correct
+               compatibility dates, KV TTL semantics
+            4. TypeScript type safety — strict types, no `any` abuse,
+               narrowed Env bindings
+            5. Testing — parser fixtures cover real-world emails, coverage is
+               meaningful, edge cases (malformed MIME, unicode, HTML-only
+               bodies) are exercised
+            6. Privacy — no PII (email addresses, OTP codes, forwarder
+               identity) leaks into console.log / logs / the public repo.
+               Fixture emails must be redacted.
+
+            Be constructive. Praise good patterns too.
+
+          # SECURITY: Allow read-only gh commands — block approve/merge
+          claude_args: |
+            --model claude-sonnet-4-6
+            --allowedTools "Bash(gh pr diff*),Bash(gh pr view*),Read,Grep,Glob"
+            --disallowedTools "Bash(gh pr review --approve*),Bash(gh pr merge*),Bash(gh pr close*)"
+
+      # Auto-approve owner PRs after the review step completes so the
+      # 1-approval branch protection is satisfied without a second reviewer.
+      # Note: this approves if the review step didn't error — it does NOT
+      # gate on whether the AI flagged issues (Claude exits 0 either way).
+      # Fork PRs are excluded by the job-level `if` condition above.
+      - name: Auto-approve owner PRs
+        if: github.event.pull_request.user.login == github.repository_owner
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              event: 'APPROVE',
+              body: 'Auto-approved: AI code review completed for repo owner PR.'
+            });
