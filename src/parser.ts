@@ -8,21 +8,14 @@
 // belt-and-suspenders guard, but ordering makes the intent explicit and
 // robust to future subject-line changes.
 
-export type ServiceKey = 'netflix' | 'netflix-household' | 'disney' | 'max' | 'amazon';
+// Single source of truth for the full set of service keys. `ServiceKey`
+// is DERIVED from this tuple, so adding a new service to the union
+// without also adding it to SERVICE_KEYS is impossible — kv.ts and the
+// dashboard iterate SERVICE_KEYS to cover every ServiceKey, and a
+// drift here would silently omit the new service.
+export const SERVICE_KEYS = ['netflix', 'netflix-household', 'disney', 'max', 'amazon'] as const;
 
-// Single source of truth for the full set of service keys. Exported as a
-// readonly tuple so TypeScript preserves each literal — this lets other
-// modules (e.g. kv.ts) iterate every ServiceKey without re-declaring the
-// list. The `satisfies readonly ServiceKey[]` assertion keeps the tuple
-// and the `ServiceKey` union in sync: if either side drifts, this line
-// fails to compile.
-export const SERVICE_KEYS = [
-  'netflix',
-  'netflix-household',
-  'disney',
-  'max',
-  'amazon',
-] as const satisfies readonly ServiceKey[];
+export type ServiceKey = (typeof SERVICE_KEYS)[number];
 
 interface PatternCommon {
   service: ServiceKey;
@@ -118,6 +111,12 @@ export const PATTERNS: readonly Pattern[] = [
  * `"evil@attacker.com <legit@account.netflix.com>"` — and we reject it by
  * returning the empty string. `senderMatch` against an empty string
  * never matches, so ambiguous From headers drop.
+ *
+ * Assumption: the caller hands us a `from` that has already been MIME-
+ * decoded (RFC 2047 encoded-words like `=?UTF-8?Q?...?=` resolved). The
+ * email() handler uses `postal-mime`'s `parsed.from.address`, which is
+ * decoded. A caller that fed us a raw RFC 2047 header could bypass the
+ * `@`-in-display-name check by encoding the `@` as `=40` — don't.
  */
 function normalizeFrom(from: string): string {
   const angleIdx = from.indexOf('<');

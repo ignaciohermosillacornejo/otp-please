@@ -118,14 +118,5 @@ export async function readAllEntries(
   const entries = await Promise.all(
     SERVICE_KEYS.map(async (service) => [service, await readEntry(env, service)] as const),
   );
-  // Start from a fully-populated object so every ServiceKey is present
-  // even if Promise.all somehow returns a short list (it won't, but the
-  // type system doesn't know that).
-  const result = Object.fromEntries(
-    SERVICE_KEYS.map((service) => [service, null] as const),
-  ) as Record<ServiceKey, StoredEntry | null>;
-  for (const [service, entry] of entries) {
-    result[service] = entry;
-  }
-  return result;
+  return Object.fromEntries(entries) as Record<ServiceKey, StoredEntry | null>;
 }
