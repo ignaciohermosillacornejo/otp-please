@@ -83,12 +83,13 @@ function normalizeFrom(from: string): string {
 }
 
 /**
- * Select the body content to scan. Prefer plain text when present; fall
- * back to HTML otherwise. We intentionally do NOT concatenate the two to
- * avoid duplicate-match noise.
+ * Select the body content to scan. Prefer plain text when non-empty (after
+ * trimming), else fall back to HTML. Some MIME senders include a stub text
+ * part containing only whitespace alongside the real HTML — treat those as
+ * empty so the HTML body is scanned instead.
  */
 function selectBody(parsed: ParsedEmail): string {
-  if (parsed.text && parsed.text.length > 0) return parsed.text;
+  if (parsed.text && parsed.text.trim().length > 0) return parsed.text;
   return parsed.html ?? '';
 }
 
@@ -133,7 +134,6 @@ export function matchEmail(parsed: ParsedEmail): MatchResult | null {
           validForMinutes: pattern.validForMinutes,
         };
       }
-      continue;
     }
   }
 

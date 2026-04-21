@@ -195,7 +195,7 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
     });
   });
 
-  it('returns null when subject field is undefined-shaped (empty string)', () => {
+  it('returns null when the sender matches no pattern', () => {
     const parsed: ParsedEmail = {
       from: 'random@unknown.example',
       subject: '',
@@ -271,6 +271,24 @@ describe('matchEmail — defensive branches', () => {
     } as unknown as ParsedEmail;
     const result = matchEmail(parsed);
     expect(result).toBeNull();
+  });
+
+  it('falls back to HTML when the text part is only whitespace', () => {
+    // Some MIME senders include a whitespace-only stub text part alongside
+    // the real HTML body. selectBody should skip the whitespace stub.
+    const parsed: ParsedEmail = {
+      from: 'noreply@disneyplus.com',
+      subject: 'Your Disney+ sign-in code',
+      text: '   \n\n  \t  ',
+      html: '<p>Your verification code is <strong>557788</strong>.</p>',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toEqual({
+      service: 'disney',
+      type: 'code',
+      value: '557788',
+      validForMinutes: 15,
+    });
   });
 });
 
