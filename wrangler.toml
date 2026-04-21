@@ -1,0 +1,22 @@
+name = "otp-please"
+main = "src/index.ts"
+compatibility_date = "2026-04-20"
+
+# KV namespace for storing extracted codes and household links.
+# After running `wrangler kv namespace create OTP_STORE`, paste the returned
+# id here (or leave a placeholder and document the step in the README).
+[[kv_namespaces]]
+binding = "OTP_STORE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+TIMEZONE = "America/Santiago"
+DASHBOARD_TITLE = "Streaming Codes"
+# Optional cheeky line shown in dashboard footer. Empty = no footer text.
+FOOTER_TEXT = ""
+# The Gmail address that is the only trusted forwarder into this Worker.
+# The email handler accepts mail only if Authentication-Results shows
+# spf=pass with smtp.mailfrom matching this address.
+TRUSTED_FORWARDER = "REPLACE_WITH_YOUR_GMAIL_ADDRESS"
+# P1: hostname resolvable only from the home tailnet. Empty = P0 mode.
+TAILSCALE_PROBE_URL = ""

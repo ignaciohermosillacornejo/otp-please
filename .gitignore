@@ -1,0 +1,10 @@
+node_modules/
+.wrangler/
+.env
+.env.local
+dist/
+coverage/
+*.log
+.DS_Store
+# Per-project Claude settings — never commit
+.claude/

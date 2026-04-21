@@ -1,0 +1,27 @@
+{
+  "name": "otp-please",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Cloudflare Worker + dashboard for relaying streaming-service OTPs to family members",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "postal-mime": "^2.2.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250415.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.90.0"
+  }
+}
