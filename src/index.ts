@@ -1,4 +1,8 @@
+import PostalMime from 'postal-mime';
+
 import type { Env } from './config';
+import { storeMatch } from './kv';
+import { matchEmail, type ParsedEmail } from './parser';
 
 /**
  * Returns true iff an Authentication-Results header proves the mail
@@ -57,13 +61,49 @@ function normalizeAddress(value: string): string {
 
 export default {
   async email(
-    _message: ForwardableEmailMessage,
-    _env: Env,
+    message: ForwardableEmailMessage,
+    env: Env,
     _ctx: ExecutionContext,
   ): Promise<void> {
-    // TODO(index): parse incoming email, extract OTP, write to KV.
-    return;
+    const authResults = message.headers.get('Authentication-Results');
+    if (!verifyForwarder(authResults, env.TRUSTED_FORWARDER)) {
+      // Log from/to only — never the Authentication-Results header, which
+      // contains the forwarder identity we're trying not to publish.
+      console.log(
+        `skip: forwarder verification failed for message from ${message.from} to ${message.to}`,
+      );
+      return;
+    }
+
+    // message.raw is a ReadableStream<Uint8Array>; Response.text() is the
+    // simplest way to turn it into a decoded string for postal-mime.
+    const raw = await new Response(message.raw).text();
+    const parsed = await PostalMime.parse(raw);
+
+    const normalized: ParsedEmail = {
+      from: parsed.from?.address ?? '',
+      subject: parsed.subject ?? '',
+      text: parsed.text ?? '',
+      html: parsed.html ?? '',
+    };
+
+    const match = matchEmail(normalized);
+    if (!match) {
+      console.log(
+        `skip: no pattern matched for "${normalized.subject}" from ${normalized.from}`,
+      );
+      return;
+    }
+
+    await storeMatch(env, match, normalized.subject, new Date());
+    // Deliberately omit match.value — codes are short-lived user-visible
+    // secrets that must not hit logs. Service + type + TTL is enough to
+    // debug a pipeline issue.
+    console.log(
+      `info: stored ${match.type} for ${match.service} (valid ${match.validForMinutes}m)`,
+    );
   },
+
   async fetch(
     _request: Request,
     _env: Env,
