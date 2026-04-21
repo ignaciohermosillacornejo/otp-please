@@ -228,6 +228,83 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
     expect(result).toBeNull();
   });
 
+  it('rejects display-name spoofing (address-shaped display name with a legit angle-bracket address)', () => {
+    // SECURITY: "Evil Display <legit@...>" must NOT authenticate as the
+    // legit sender. An @ in the display name is treated as ambiguous and
+    // normalizeFrom returns empty, so senderMatch fails for every pattern.
+    const parsed: ParsedEmail = {
+      from: 'evil@attacker.example <info@account.netflix.com>',
+      subject: 'Your Netflix sign-in code',
+      text: 'Your code is 1234.',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toBeNull();
+  });
+
+  it('rejects a malformed from with an unclosed angle bracket', () => {
+    const parsed: ParsedEmail = {
+      from: 'Netflix <info@account.netflix.com',
+      subject: 'Your Netflix sign-in code',
+      text: 'Your code is 1234.',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toBeNull();
+  });
+
+  it('extracts the Netflix code from context and ignores nearby 4-digit years', () => {
+    // A real Netflix email may include "© 2026 Netflix, Inc." or
+    // "account since 2019". The codeRegex requires a contextual word
+    // (code/passcode/código/...) so the year-shaped digits are skipped.
+    const parsed: ParsedEmail = {
+      from: 'info@account.netflix.com',
+      subject: 'Your Netflix sign-in code',
+      text: 'Account since 2019. Your sign-in code is 7531. © 2026 Netflix, Inc.',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toEqual({
+      service: 'netflix',
+      type: 'code',
+      value: '7531',
+      validForMinutes: 15,
+    });
+  });
+
+  it('extracts a Spanish-language code via "código"', () => {
+    const parsed: ParsedEmail = {
+      from: 'info@account.netflix.com',
+      subject: 'Tu código de inicio de sesión de Netflix',
+      text: 'Tu código de verificación es 4242. Expira en 15 minutos.',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toEqual({
+      service: 'netflix',
+      type: 'code',
+      value: '4242',
+      validForMinutes: 15,
+    });
+  });
+
+  it('matches a Netflix household link when it only appears in the HTML body', () => {
+    const parsed: ParsedEmail = {
+      from: 'info@account.netflix.com',
+      subject: 'Update your Netflix Household',
+      text: '',
+      html:
+        '<p><a href="https://www.netflix.com/account/update-primary-location/' +
+        'HTML_ONLY_TOKEN_0002">Confirm</a></p>',
+    };
+    const result = matchEmail(parsed);
+    expect(result?.service).toBe('netflix-household');
+    expect(result?.type).toBe('household');
+    expect(result?.value).toContain(
+      'https://www.netflix.com/account/update-primary-location/HTML_ONLY_TOKEN_0002',
+    );
+  });
+
   it('returns null when Amazon sender matches but body lacks Prime Video', () => {
     const parsed: ParsedEmail = {
       from: 'no-reply@amazon.com',
