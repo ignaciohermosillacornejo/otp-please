@@ -12,7 +12,6 @@ Supported in this P0 release:
 - **Netflix Household** — "update primary location" / travel approval link. Approval is currently "open the link, only works from the home network" with an on-page warning for travelers; P1 will gate this by tailnet presence so the link is only surfaced when the viewer is actually on the home LAN.
 - **Disney+** — 6-digit verification code.
 - **Max** — 6-digit verification code.
-- **Prime Video** — 6-digit verification code (scoped to Amazon mails that mention Prime Video in the body).
 
 Adding a service is cheap — see the [Adding a new service](#adding-a-new-service) walkthrough.
 
@@ -109,7 +108,7 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
    - Gmail → *Settings → Filters and Blocked Addresses* → *Create a new filter*.
    - Criteria (From):
      ```
-     from:(info@account.netflix.com OR info@mailer.netflix.com OR noreply@disneyplus.com OR noreply@mail.disneyplus.com OR no-reply@max.com OR no-reply@hbomax.com OR no-reply@service.hbomax.com OR account-update@amazon.com OR noreply@amazon.com)
+     from:(@account.netflix.com OR @mailer.netflix.com OR @disneyplus.com OR @mail2.disneyplus.com OR @mail.disneyplus.com OR @max.com OR @hbomax.com OR @alerts.hbomax.com OR @service.hbomax.com)
      ```
      This covers every sender domain matched by `PATTERNS` in `src/parser.ts`, including the legacy `@hbomax.com` / `@service.hbomax.com` addresses the parser still accepts for backwards-compat and the `@mailer.netflix.com` / `@mail.disneyplus.com` variants some services use. Add or remove entries to match the services you actually use; `src/parser.ts` is the authoritative list.
    - Actions: **Forward it to `codes@<yourdomain>`** (pick the previously-verified address).
@@ -136,7 +135,7 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
 
 ## Adding a new service
 
-1. Add a new `Pattern` entry to `PATTERNS` in `src/parser.ts`. You need a `senderMatch` regex, either a `codeRegex` (for OTPs) or a `linkRegex` (for approval links), and a `validForMinutes`. Add a `bodyRequire` if the sender is shared across products (see the Amazon / Prime Video entry).
+1. Add a new `Pattern` entry to `PATTERNS` in `src/parser.ts`. You need a `senderMatch` regex, either a `codeRegex` (for OTPs) or a `linkRegex` (for approval links), and a `validForMinutes`. Add a `bodyRequire` if the sender is shared across products and you need a body substring to disambiguate (useful for generic transactional senders).
 2. Add the new service name to `SERVICE_KEYS` at the top of `src/parser.ts`. TypeScript enforces that `ServiceKey` stays in sync.
 3. Add a display-name + Tailwind accent colors to `SERVICE_META` in `src/dashboard.ts`, and add the service to `DISPLAY_ORDER` so the card shows up in the layout.
 4. Drop a sanitized `.eml` fixture into `test/fixtures/` and add a matching test in `test/parser.test.ts`. Fixtures use obviously-fake values like `FAKE_TRAVEL_TOKEN_0002` or sequential digits (`123456`).
@@ -174,7 +173,7 @@ Common failure modes and what they mean:
 
 ### What this Worker does NOT do
 
-- **No DKIM-alignment check** on the original streaming service's signature. The Gmail filter already handles sender selection; a deeper cryptographic check on the original Netflix/Disney/Max/Amazon signature is P2 work.
+- **No DKIM-alignment check** on the original streaming service's signature. The Gmail filter already handles sender selection; a deeper cryptographic check on the original Netflix/Disney/Max signature is P2 work.
 - **No persistent state** beyond Workers KV entries. No user list, no history, no session tokens, no audit log. Cold starts have no in-memory carryover.
 - **No retry on failed KV writes.** Cloudflare will not re-invoke `email()` on a Worker exception, and that's on purpose — we'd rather drop a code than risk double-delivering one after a partial put.
 
@@ -189,8 +188,6 @@ Common failure modes and what they mean:
 
 Tracked as open follow-ups:
 
-- [#2](https://github.com/ignaciohermosillacornejo/otp-please/issues/2) — **Max sender regex is a guess.** The current pattern accepts both `@max.com` and legacy `@hbomax.com` / `@service.hbomax.com`; once we have real post-rebrand samples we should tighten it.
-- [#3](https://github.com/ignaciohermosillacornejo/otp-please/issues/3) — **Amazon / Prime Video matcher is over-broad.** Amazon uses a shared sender across many products; we currently narrow to Prime Video via a body substring check, but the `senderMatch` could be scoped further.
 - [#7](https://github.com/ignaciohermosillacornejo/otp-please/issues/7) — **CODE_CONTEXT budget may be too small for HTML-only bodies.** HTML emails with heavy markup between the keyword and the digits can fall outside the 40-char non-digit window.
 
 ## Contributing
