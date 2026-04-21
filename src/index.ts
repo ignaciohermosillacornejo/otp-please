@@ -1,8 +1,28 @@
 import PostalMime from 'postal-mime';
 
 import type { Env } from './config';
-import { storeMatch } from './kv';
+import { renderDashboard } from './dashboard';
+import { readAllEntries, storeMatch } from './kv';
 import { matchEmail, type ParsedEmail } from './parser';
+
+// Conservative Content-Security-Policy for the HTML response.
+//
+// `'unsafe-inline'` on script-src is unavoidable while we ship the
+// Tailwind CDN runtime — Tailwind injects inline style/script tags at
+// load. Our own client code is also inline. Dropping `'unsafe-inline'`
+// would require nonce-tagging both ours and Tailwind's, which the CDN
+// doesn't support. Tradeoff accepted: the attack surface is limited to
+// the dashboard being single-tenant and Access-gated.
+//
+// `img-src 'self' data:` allows inline data URLs if a future card ever
+// wants a small embedded icon; `connect-src 'self'` blocks outbound
+// fetches to third parties.
+const CSP_HEADER =
+  "default-src 'self'; " +
+  "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; " +
+  "style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; " +
+  "img-src 'self' data:; " +
+  "connect-src 'self';";
 
 /**
  * Returns true iff an Authentication-Results header proves the mail
@@ -43,10 +63,19 @@ export function verifyForwarder(
   const normalizedTrusted = normalizeAddress(trustedForwarder);
   if (!normalizedTrusted) return false;
 
+  // Strip RFC 8601 parenthetical comments before splitting. SPF-result
+  // parentheticals commonly contain commas
+  // (e.g. "spf=pass (google.com: domain of X designates Y as permitted
+  // sender, allow) smtp.mailfrom=..."), and splitting on `,` inside a
+  // comment would fragment a single stanza so neither fragment carries
+  // both spf=pass and smtp.mailfrom — dropping legitimate mail.
+  // Comments are documentation, not semantic, so removing them is safe.
+  const withoutComments = authResultsHeader.replace(/\([^)]*\)/g, '');
+
   // Split on both `;` (intra-header segmentation) and `,` (multiple
   // headers merged by Headers.get). Each resulting segment is checked
   // independently for an spf=pass + matching smtp.mailfrom pair.
-  const segments = authResultsHeader.split(/[;,]/);
+  const segments = withoutComments.split(/[;,]/);
   for (const segment of segments) {
     const spfMatch = segment.match(/\bspf=(\w+)/i);
     if (!spfMatch) continue;
@@ -133,11 +162,67 @@ export default {
   },
 
   async fetch(
-    _request: Request,
-    _env: Env,
+    request: Request,
+    env: Env,
     _ctx: ExecutionContext,
   ): Promise<Response> {
-    // TODO(index): serve the Access-gated dashboard.
-    return new Response('Not Implemented', { status: 501 });
+    // Reject non-GET early with a conventional 405 + Allow header. The
+    // dashboard is read-only; POST/PUT/etc. have no meaning and we'd
+    // rather fail loudly than silently serve the HTML to, say, a
+    // misconfigured health probe.
+    if (request.method !== 'GET') {
+      return new Response('Method Not Allowed', {
+        status: 405,
+        headers: { Allow: 'GET' },
+      });
+    }
+
+    const url = new URL(request.url);
+
+    // /healthz — unauthenticated liveness probe. Expected to be exempt
+    // from Access at the app-config layer so uptime monitoring can
+    // reach it without a cookie. Keep the body a literal "ok" and the
+    // content-type plain text so curl-style probes work unchanged.
+    if (url.pathname === '/healthz') {
+      return new Response('ok', {
+        status: 200,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          'cache-control': 'no-store',
+        },
+      });
+    }
+
+    // /api — machine-readable JSON snapshot of every service entry.
+    // Same Record<ServiceKey, StoredEntry|null> shape the HTML
+    // renderer consumes. Intentionally identical to readAllEntries'
+    // return value; downstream scripts can mirror the dashboard's
+    // state without parsing HTML.
+    if (url.pathname === '/api') {
+      const entries = await readAllEntries(env);
+      return Response.json(entries, {
+        headers: { 'cache-control': 'no-store' },
+      });
+    }
+
+    // Everything else → dashboard. Unknown paths intentionally fall
+    // through rather than 404ing, so bookmarks to old URLs and
+    // casual typos still land on something useful.
+    const entries = await readAllEntries(env);
+    const html = renderDashboard({
+      entries,
+      title: env.DASHBOARD_TITLE,
+      footerText: env.FOOTER_TEXT,
+      now: new Date(),
+    });
+
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store',
+        'content-security-policy': CSP_HEADER,
+      },
+    });
   },
 } satisfies ExportedHandler<Env>;
