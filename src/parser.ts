@@ -64,9 +64,13 @@ export const PATTERNS: readonly Pattern[] = [
     service: 'netflix-household',
     senderMatch: /@account\.netflix\.com$|@mailer\.netflix\.com$/i,
     // No capture group on purpose — household extraction returns the full
-    // URL, which matchEmail reads via `match[0]`.
+    // URL, which matchEmail reads via `match[0]`. The terminator class
+    // is negative (exclude whitespace + HTML delimiters) so the regex
+    // admits any RFC 3986 character Netflix might include in a token
+    // (~, +, !, etc.) without truncating. Real-world terminators in
+    // email bodies are whitespace, quotes, or angle brackets.
     linkRegex:
-      /https:\/\/(?:www\.)?netflix\.com\/account\/(?:travel|update-primary-location)\/[A-Za-z0-9_\-=?&%./]+/,
+      /https:\/\/(?:www\.)?netflix\.com\/account\/(?:travel|update-primary-location)\/[^\s"'<>]+/,
     validForMinutes: 15,
   },
   {

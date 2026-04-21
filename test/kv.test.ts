@@ -62,11 +62,6 @@ class FakeKV {
     if (type === 'json') return JSON.parse(row.value);
     return row.value;
   }
-
-  // Helpers for tests; not part of the KVNamespace contract.
-  _raw(key: string): { value: string; expiresAt: number | null } | undefined {
-    return this.store.get(key);
-  }
 }
 
 function makeEnv(): { env: Env; kv: FakeKV } {
