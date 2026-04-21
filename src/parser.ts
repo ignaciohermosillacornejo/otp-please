@@ -13,7 +13,7 @@
 // without also adding it to SERVICE_KEYS is impossible — kv.ts and the
 // dashboard iterate SERVICE_KEYS to cover every ServiceKey, and a
 // drift here would silently omit the new service.
-export const SERVICE_KEYS = ['netflix', 'netflix-household', 'disney', 'max', 'amazon'] as const;
+export const SERVICE_KEYS = ['netflix', 'netflix-household', 'disney', 'max'] as const;
 
 export type ServiceKey = (typeof SERVICE_KEYS)[number];
 
@@ -82,24 +82,22 @@ export const PATTERNS: readonly Pattern[] = [
   },
   {
     service: 'disney',
-    senderMatch: /@disneyplus\.com$|@mail\.disneyplus\.com$/i,
+    // Real transactional sender seen in the wild: disneyplus@trx.mail2.
+    // disneyplus.com. The regex matches any disneyplus.com subdomain so
+    // the parser doesn't need updating when Disney adds a new subdomain
+    // or rotates bulk-mailer hosts.
+    senderMatch: /@([\w-]+\.)*disneyplus\.com$/i,
     codeRegex: codeOf(6),
     validForMinutes: 15,
   },
   {
     service: 'max',
-    // `@service.hbomax.com` is a legacy sender from before the HBO Max →
-    // Max rebrand; keeping it broadens backward-compat with any still-
-    // live transactional mail flows until we have real post-rebrand samples.
-    senderMatch: /@(hbomax|max)\.com$|@service\.hbomax\.com$/i,
+    // Real transactional senders: no-reply@alerts.hbomax.com and
+    // hbomax@service.hbomax.com. Post-rebrand mail sometimes comes from
+    // *.max.com subdomains. This regex covers the apex and any
+    // subdomain of hbomax.com or max.com.
+    senderMatch: /@([\w-]+\.)*(hbomax|max)\.com$/i,
     codeRegex: codeOf(6),
-    validForMinutes: 15,
-  },
-  {
-    service: 'amazon',
-    senderMatch: /@amazon\.com$/i,
-    codeRegex: codeOf(6),
-    bodyRequire: /prime video/i,
     validForMinutes: 15,
   },
 ];

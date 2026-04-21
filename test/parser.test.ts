@@ -54,16 +54,6 @@ describe('matchEmail — happy paths per service', () => {
     });
   });
 
-  it('matches an Amazon Prime Video code when body references Prime Video', async () => {
-    const parsed = await loadFixture('amazon-primevideo.eml');
-    const result = matchEmail(parsed);
-    expect(result).toEqual({
-      service: 'amazon',
-      type: 'code',
-      value: '345678',
-      validForMinutes: 15,
-    });
-  });
 });
 
 describe('matchEmail — Netflix household / travel', () => {
@@ -88,12 +78,6 @@ describe('matchEmail — Netflix household / travel', () => {
 });
 
 describe('matchEmail — negative cases', () => {
-  it('returns null for an Amazon non-Prime-Video login email (bodyRequire rejects)', async () => {
-    const parsed = await loadFixture('amazon-login-non-prime.eml');
-    const result = matchEmail(parsed);
-    expect(result).toBeNull();
-  });
-
   it('returns null for an unrelated newsletter', async () => {
     const parsed = await loadFixture('random-newsletter.eml');
     const result = matchEmail(parsed);
@@ -305,15 +289,40 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
     );
   });
 
-  it('returns null when Amazon sender matches but body lacks Prime Video', () => {
+  it('matches Disney+ code from a trx.mail2.disneyplus.com subdomain sender', () => {
+    // Real transactional sender seen in the wild:
+    // disneyplus@trx.mail2.disneyplus.com.
     const parsed: ParsedEmail = {
-      from: 'no-reply@amazon.com',
-      subject: 'Your Amazon code',
-      text: 'Your code is 222222.',
+      from: 'Disney+ <disneyplus@trx.mail2.disneyplus.com>',
+      subject: 'Your Disney+ one-time passcode',
+      text: 'Your verification code is 889911.',
       html: '',
     };
     const result = matchEmail(parsed);
-    expect(result).toBeNull();
+    expect(result).toEqual({
+      service: 'disney',
+      type: 'code',
+      value: '889911',
+      validForMinutes: 15,
+    });
+  });
+
+  it('matches a Max code from the alerts.hbomax.com subdomain', () => {
+    // Real transactional sender seen in the wild:
+    // no-reply@alerts.hbomax.com.
+    const parsed: ParsedEmail = {
+      from: 'Max <no-reply@alerts.hbomax.com>',
+      subject: 'Your Max sign-in code',
+      text: 'Your code is 554433.',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toEqual({
+      service: 'max',
+      type: 'code',
+      value: '554433',
+      validForMinutes: 15,
+    });
   });
 });
 

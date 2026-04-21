@@ -373,7 +373,7 @@ describe('fetch() handler', () => {
     // Services with no entry still appear as null slots.
     expect(body).toHaveProperty('disney', null);
     expect(body).toHaveProperty('max', null);
-    expect(body).toHaveProperty('amazon', null);
+    expect(body).not.toHaveProperty('amazon');
     expect(body).toHaveProperty('netflix-household', null);
   });
 
