@@ -2,6 +2,9 @@ node_modules/
 .wrangler/
 .env
 .env.local
+# Local-only values for `wrangler dev`; the committed template is
+# .dev.vars.example. Never commit real secrets here.
+.dev.vars
 dist/
 coverage/
 *.log
