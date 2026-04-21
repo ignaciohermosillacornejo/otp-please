@@ -1,0 +1,40 @@
+From: Disney+ <noreply@disneyplus.com>
+To: codes@example.com
+Subject: Your Disney+ one-time passcode
+Date: Sat, 19 Apr 2026 13:05:17 +0000
+Message-ID: <disney-signin-001@disneyplus.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-disney-signin"
+
+--boundary-disney-signin
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Hi there,
+
+Your Disney+ one-time passcode is:
+
+123456
+
+Please enter this code in the Disney+ app or site within the next 15
+minutes.
+
+If you didn't request this, you can safely ignore this email.
+
+Thanks,
+The Disney+ team
+
+--boundary-disney-signin
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+<html><body>
+<p>Hi there,</p>
+<p>Your Disney+ one-time passcode is:</p>
+<p style="font-size:28px;letter-spacing:6px;">123456</p>
+<p>Please enter this code in the Disney+ app or site within the next 15 minutes.</p>
+<p>If you didn't request this, you can safely ignore this email.</p>
+<p>Thanks,<br>The Disney+ team</p>
+</body></html>
+
+--boundary-disney-signin--

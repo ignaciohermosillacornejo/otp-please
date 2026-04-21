@@ -1,0 +1,40 @@
+From: Amazon <no-reply@amazon.com>
+To: codes@example.com
+Subject: Amazon Prime Video: Your sign-in OTP
+Date: Sat, 19 Apr 2026 15:30:44 +0000
+Message-ID: <amazon-primevideo-001@amazon.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-amazon-primevideo"
+
+--boundary-amazon-primevideo
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+You're trying to sign in to Prime Video on a new device.
+
+Your Prime Video one-time passcode is:
+
+345678
+
+This passcode expires in 15 minutes. If you didn't request this, please
+ignore this email.
+
+Thanks,
+Amazon
+
+--boundary-amazon-primevideo
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+<html><body>
+<p>Hi,</p>
+<p>You're trying to sign in to Prime Video on a new device.</p>
+<p>Your Prime Video one-time passcode is:</p>
+<p style="font-size:28px;letter-spacing:6px;">345678</p>
+<p>This passcode expires in 15 minutes. If you didn't request this, please ignore this email.</p>
+<p>Thanks,<br>Amazon</p>
+</body></html>
+
+--boundary-amazon-primevideo--
