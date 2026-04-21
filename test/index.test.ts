@@ -160,7 +160,12 @@ describe('verifyForwarder', () => {
     expect(verifyForwarder(header, trusted)).toBe(true);
   });
 
-  it('accepts multiple stanzas joined by newline where one matches', () => {
+  it('still matches when stanzas are separated by both ";" and a newline (header folding)', () => {
+    // Regex splits on `;` and `,` only — this passes because the
+    // critical `spf=pass smtp.mailfrom=...` clause is cleanly bounded
+    // by `;` within the second stanza, not because `\n` is a separator.
+    // The test is here to document that newline-folded real-world
+    // headers still work, NOT to claim `\n` is an intentional split point.
     const receivingMTA = 'mx.other.net; dkim=none; spf=none';
     const header = `${receivingMTA}\n${GMAIL_AUTH_PASS}`;
     expect(verifyForwarder(header, trusted)).toBe(true);
@@ -220,11 +225,23 @@ describe('email() handler', () => {
         'Authentication-Results':
           'mx.cloudflare.com; spf=fail smtp.mailfrom=owner@example.com',
       },
+      from: 'owner@example.com',
+      to: 'codes@example.com',
+    });
+    const logs: string[] = [];
+    vi.mocked(console.log).mockImplementation((msg: string) => {
+      logs.push(msg);
     });
 
     await worker.email!(message, env, fakeCtx());
 
     expect(kv.puts).toHaveLength(0);
+    // Privacy: the skip log must NOT include the envelope from/to or
+    // any authentication header content.
+    expect(logs).toHaveLength(1);
+    expect(logs[0]).toBe('skip: forwarder verification failed (envelope rejected)');
+    expect(logs[0]).not.toContain('owner@example.com');
+    expect(logs[0]).not.toContain('codes@example.com');
   });
 
   it('writes nothing when the Authentication-Results header is missing', async () => {
@@ -250,6 +267,56 @@ describe('email() handler', () => {
     await worker.email!(message, env, fakeCtx());
 
     expect(kv.puts).toHaveLength(0);
+  });
+
+  it('swallows and logs KV failures rather than propagating an unhandled rejection', async () => {
+    const { env, kv } = makeEnv();
+    // Force storeMatch's put() call to fail. We assert the handler
+    // resolves normally and emits an `err:`-prefixed log line rather
+    // than letting the rejection surface to the Workers runtime (which
+    // would otherwise silently retry/drop the mail).
+    const failingKv = kv as unknown as { put: typeof kv.put };
+    failingKv.put = async () => {
+      throw new Error('kv outage');
+    };
+    const message = makeMessage({
+      raw: loadFixture('netflix-signin.eml'),
+      headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
+      from: 'info@account.netflix.com',
+    });
+    const logs: string[] = [];
+    vi.mocked(console.log).mockImplementation((msg: string) => {
+      logs.push(msg);
+    });
+
+    await expect(worker.email!(message, env, fakeCtx())).resolves.toBeUndefined();
+    expect(logs.some((l) => l.startsWith('err: KV write failed for netflix'))).toBe(
+      true,
+    );
+    // The error log must NOT contain the extracted code.
+    expect(logs.every((l) => !l.includes('1234'))).toBe(true);
+  });
+
+  it('swallows non-Error throws from KV (string rejection) without crashing', async () => {
+    // Defensive test for the `err instanceof Error` branch — some KV
+    // wrappers reject with plain strings or objects.
+    const { env, kv } = makeEnv();
+    const failingKv = kv as unknown as { put: typeof kv.put };
+    failingKv.put = async () => {
+      throw 'kv string error';
+    };
+    const message = makeMessage({
+      raw: loadFixture('netflix-signin.eml'),
+      headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
+      from: 'info@account.netflix.com',
+    });
+    const logs: string[] = [];
+    vi.mocked(console.log).mockImplementation((msg: string) => {
+      logs.push(msg);
+    });
+
+    await expect(worker.email!(message, env, fakeCtx())).resolves.toBeUndefined();
+    expect(logs.some((l) => l.includes('kv string error'))).toBe(true);
   });
 });
 
