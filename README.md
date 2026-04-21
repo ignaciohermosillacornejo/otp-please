@@ -162,6 +162,7 @@ Common failure modes and what they mean:
 - **`skip: no pattern matched for "..." from ...`** — the sender address or body didn't match any entry in `PATTERNS`. The log includes the subject and parsed `from`; compare them against `src/parser.ts` and adjust the regex if the service has changed its email template.
 - **`err: KV write failed for <service>: ...`** — a transient KV put failure. The Worker does NOT retry on purpose (see the [Security model](#security-model) below) — the next email from the same service will simply overwrite the key. If you see this repeatedly, check Cloudflare status.
 - **Empty dashboard but `wrangler tail` shows stored entries** — either the codes already expired (their `valid_until` + 1 hour grace elapsed), or the KV namespace id in `wrangler.toml` doesn't match the one the dashboard binding reads from. Run `npx wrangler kv key list --binding=OTP_STORE` to confirm what's actually stored.
+- **`wrangler dev` always rejects emails** — Worker secrets are not exposed to `wrangler dev`. Copy `.dev.vars.example` to `.dev.vars` and set `TRUSTED_FORWARDER="..."` to a value `wrangler dev` can feed as an env var. `.dev.vars` is gitignored so it won't land in the repo.
 
 ## Security model
 

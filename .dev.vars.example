@@ -1,0 +1,6 @@
+# Local values for `wrangler dev`. Copy this file to `.dev.vars` (which is
+# gitignored via .gitignore) and fill in a value. In production, the real
+# TRUSTED_FORWARDER is set out of band via `wrangler secret put` — see
+# README §4 step 5. Without this file set, `wrangler dev` will reject
+# every incoming mail with "skip: forwarder verification failed".
+TRUSTED_FORWARDER="test@example.com"
