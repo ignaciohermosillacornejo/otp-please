@@ -83,6 +83,7 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
    - `TIMEZONE` — your IANA timezone. `America/Santiago` ships as the default — change it to your own (e.g. `America/New_York`, `Europe/Madrid`).
    - `DASHBOARD_TITLE` — whatever you want at the top of the page (e.g. `"Family Codes"`).
    - `FOOTER_TEXT` — optional line shown in the page footer. Leave as `""` if you don't want one.
+   - `TAILSCALE_PROBE_URL` — leave empty (`""`) for now. This is a P1 placeholder for home-network gating of the Netflix Household link (resolving only from the tailnet); it isn't wired up in P0, and an empty value is the correct default.
 
 4. **Deploy the Worker:**
    ```bash
@@ -103,9 +104,9 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
    - Gmail → *Settings → Filters and Blocked Addresses* → *Create a new filter*.
    - Criteria (From):
      ```
-     from:(info@account.netflix.com OR noreply@disneyplus.com OR no-reply@max.com OR account-update@amazon.com OR noreply@amazon.com)
+     from:(info@account.netflix.com OR info@mailer.netflix.com OR noreply@disneyplus.com OR noreply@mail.disneyplus.com OR no-reply@max.com OR no-reply@hbomax.com OR no-reply@service.hbomax.com OR account-update@amazon.com OR noreply@amazon.com)
      ```
-     Add or remove senders to match the services you use; see `PATTERNS` in `src/parser.ts` for the authoritative list.
+     This covers every sender domain matched by `PATTERNS` in `src/parser.ts`, including the legacy `@hbomax.com` / `@service.hbomax.com` addresses the parser still accepts for backwards-compat and the `@mailer.netflix.com` / `@mail.disneyplus.com` variants some services use. Add or remove entries to match the services you actually use; `src/parser.ts` is the authoritative list.
    - Actions: **Forward it to `codes@<yourdomain>`** (pick the previously-verified address).
    - **Do NOT check "Skip the Inbox".** You want the original email to stay in your inbox as an audit trail and manual fallback.
    - Save.
