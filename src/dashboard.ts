@@ -30,7 +30,6 @@ export const DISPLAY_ORDER: readonly ServiceKey[] = [
   'netflix-household',
   'disney',
   'max',
-  'amazon',
 ] as const;
 
 interface ServiceMeta {
@@ -66,12 +65,6 @@ const SERVICE_META: Record<ServiceKey, ServiceMeta> = {
     name: 'Max',
     accentBorder: 'border-purple-600',
     accentText: 'text-purple-400',
-    emptyMessage: 'no recent code',
-  },
-  amazon: {
-    name: 'Prime Video',
-    accentBorder: 'border-sky-500',
-    accentText: 'text-sky-400',
     emptyMessage: 'no recent code',
   },
 };

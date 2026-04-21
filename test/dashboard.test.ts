@@ -33,7 +33,6 @@ function emptyEntries(): Record<ServiceKey, StoredEntry | null> {
     'netflix-household': null,
     disney: null,
     max: null,
-    amazon: null,
   };
 }
 
@@ -50,13 +49,12 @@ function defaultData(
 }
 
 describe('DISPLAY_ORDER', () => {
-  it('lists all five services in the documented order', () => {
+  it('lists the four supported services in the documented order', () => {
     expect(DISPLAY_ORDER).toEqual([
       'netflix',
       'netflix-household',
       'disney',
       'max',
-      'amazon',
     ]);
   });
 });
@@ -118,21 +116,19 @@ describe('renderDashboard — structure and ordering', () => {
     expect(html).toContain('>Netflix Household<');
     expect(html).toContain('>Disney+<');
     expect(html).toContain('>Max<');
-    expect(html).toContain('>Prime Video<');
+    expect(html).not.toContain('>Prime Video<');
   });
 
-  it('renders cards in DISPLAY_ORDER (netflix before disney before max before amazon)', () => {
+  it('renders cards in DISPLAY_ORDER (netflix before household before disney before max)', () => {
     const html = renderDashboard(defaultData());
     const idxNetflix = html.indexOf('>Netflix<');
     const idxHousehold = html.indexOf('>Netflix Household<');
     const idxDisney = html.indexOf('>Disney+<');
     const idxMax = html.indexOf('>Max<');
-    const idxAmazon = html.indexOf('>Prime Video<');
     expect(idxNetflix).toBeGreaterThan(-1);
     expect(idxNetflix).toBeLessThan(idxHousehold);
     expect(idxHousehold).toBeLessThan(idxDisney);
     expect(idxDisney).toBeLessThan(idxMax);
-    expect(idxMax).toBeLessThan(idxAmazon);
   });
 });
 
@@ -229,8 +225,8 @@ describe('renderDashboard — household entries', () => {
 describe('renderDashboard — empty states', () => {
   it('renders "no recent code" for non-household services with null entries', () => {
     const html = renderDashboard(defaultData());
-    // "no recent code" appears for netflix, disney, max, amazon — four times.
-    expect(html.match(/no recent code/g)?.length).toBe(4);
+    // "no recent code" appears for netflix, disney, max — three times.
+    expect(html.match(/no recent code/g)?.length).toBe(3);
   });
 
   it('renders "no household request pending" for netflix-household with null entry', () => {

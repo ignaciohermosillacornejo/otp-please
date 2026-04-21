@@ -89,7 +89,6 @@ describe('kvKeyFor', () => {
     expect(kvKeyFor('netflix-household')).toBe('entry:netflix-household');
     expect(kvKeyFor('disney')).toBe('entry:disney');
     expect(kvKeyFor('max')).toBe('entry:max');
-    expect(kvKeyFor('amazon')).toBe('entry:amazon');
   });
 
   it('uses the exported KV_KEY_PREFIX', () => {
@@ -219,25 +218,25 @@ describe('readEntry', () => {
   });
 
   it('returns null when nothing has been stored for the service', async () => {
-    const read = await readEntry(env, 'amazon');
+    const read = await readEntry(env, 'max');
     expect(read).toBeNull();
   });
 
   it('returns null once the fake clock passes the stored TTL', async () => {
     const match: MatchResult = {
-      service: 'amazon',
+      service: 'max',
       type: 'code',
       value: '345678',
       validForMinutes: 15,
     };
-    await storeMatch(env, match, 'Prime Video', FIXED_NOW);
+    await storeMatch(env, match, 'Your Max sign-in code', FIXED_NOW);
 
     // Before expiry.
-    expect(await readEntry(env, 'amazon')).not.toBeNull();
+    expect(await readEntry(env, 'max')).not.toBeNull();
 
     // Advance past TTL = 15*60 + 3600 = 4500 seconds.
     kv.advanceSecondsBy(15 * 60 + ONE_HOUR_SECONDS);
-    expect(await readEntry(env, 'amazon')).toBeNull();
+    expect(await readEntry(env, 'max')).toBeNull();
   });
 });
 
@@ -288,7 +287,7 @@ describe('readAllEntries', () => {
     );
 
     // Services never written must still be present and null.
-    const unset: ServiceKey[] = ['disney', 'max', 'amazon'];
+    const unset: ServiceKey[] = ['disney', 'max'];
     for (const service of unset) {
       expect(result[service]).toBeNull();
     }
