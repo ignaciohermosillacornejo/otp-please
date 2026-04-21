@@ -10,6 +10,20 @@
 
 export type ServiceKey = 'netflix' | 'netflix-household' | 'disney' | 'max' | 'amazon';
 
+// Single source of truth for the full set of service keys. Exported as a
+// readonly tuple so TypeScript preserves each literal — this lets other
+// modules (e.g. kv.ts) iterate every ServiceKey without re-declaring the
+// list. The `satisfies readonly ServiceKey[]` assertion keeps the tuple
+// and the `ServiceKey` union in sync: if either side drifts, this line
+// fails to compile.
+export const SERVICE_KEYS = [
+  'netflix',
+  'netflix-household',
+  'disney',
+  'max',
+  'amazon',
+] as const satisfies readonly ServiceKey[];
+
 interface PatternCommon {
   service: ServiceKey;
   senderMatch: RegExp;
