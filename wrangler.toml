@@ -2,6 +2,14 @@ name = "otp-please"
 main = "src/index.ts"
 compatibility_date = "2026-04-20"
 
+# Serve the dashboard at a friendly custom domain on the deployer's zone.
+# `custom_domain = true` lets Cloudflare auto-manage the DNS + TLS for
+# this hostname without us pre-creating a proxied CNAME. Point the
+# pattern at whatever subdomain you want family members to bookmark.
+routes = [
+  { pattern = "codes.ignaciohermosilla.com", custom_domain = true },
+]
+
 # KV namespace for storing extracted codes and household links.
 # After running `wrangler kv namespace create OTP_STORE`, paste the returned
 # id here (or keep the placeholder and document the step in the README).
