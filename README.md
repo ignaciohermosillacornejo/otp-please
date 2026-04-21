@@ -1,0 +1,195 @@
+# otp-please
+
+My family kept asking me for streaming-service verification codes — every time they tried to log in to Netflix from a new device, or approve a Disney+ sign-in, I had to pull up Gmail and read the six digits aloud over WhatsApp. This Cloudflare Worker reads those emails automatically and puts the code on a little dashboard behind Cloudflare Access so they can grab it themselves.
+
+## What it does
+
+When a configured streaming service sends an OTP email to the account owner's Gmail, a Gmail filter forwards a copy to a Cloudflare Email Routing address. An Email Worker parses the message, extracts the code (or, for Netflix Household, the approval link), and writes it to Workers KV. A mobile-first dashboard — gated by Cloudflare Access so only the authorized family members can reach it — shows the current code per service with a live countdown.
+
+Supported in this P0 release:
+
+- **Netflix** — sign-in OTP (4-digit).
+- **Netflix Household** — "update primary location" / travel approval link. Approval is currently "open the link, only works from the home network" with an on-page warning for travelers; P1 will gate this by tailnet presence so the link is only surfaced when the viewer is actually on the home LAN.
+- **Disney+** — 6-digit verification code.
+- **Max** — 6-digit verification code.
+- **Prime Video** — 6-digit verification code (scoped to Amazon mails that mention Prime Video in the body).
+
+Adding a service is cheap — see the [Adding a new service](#adding-a-new-service) walkthrough.
+
+## Architecture
+
+No home server. No Docker. All compute runs on Cloudflare's edge.
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Streaming service emails account owner's Gmail      │
+│  → Gmail filter forwards matching mails to           │
+│    codes@<your domain>                               │
+│  → Original copy stays in inbox (filter does NOT     │
+│    "Skip Inbox") — permanent audit trail             │
+└──────────────────────┬───────────────────────────────┘
+                       │ SMTP
+                       ▼
+┌──────────────────────────────────────────────────────┐
+│  Cloudflare Email Routing                            │
+│  codes@<domain> → Email Worker `otp-please`          │
+│  catch-all *@<domain> → personal inbox (safety net)  │
+└──────────────────────┬───────────────────────────────┘
+                       │ Worker invocation
+                       ▼
+┌──────────────────────────────────────────────────────┐
+│  Cloudflare Worker `otp-please`                      │
+│                                                      │
+│  email() handler:                                    │
+│   - Verifies Authentication-Results (spf=pass +      │
+│     smtp.mailfrom matches TRUSTED_FORWARDER)         │
+│   - Parses MIME via postal-mime                      │
+│   - Per-service pattern matching                     │
+│   - Writes StoredEntry to KV with 1h grace TTL       │
+│                                                      │
+│  fetch() handler (gated by Cloudflare Access):       │
+│   - GET /        → dashboard HTML                    │
+│   - GET /api     → JSON of current entries           │
+│   - GET /healthz → 200 ok (exempt from Access)       │
+└──────────────────────────────────────────────────────┘
+```
+
+## Setup
+
+**Prerequisites**
+
+- A Cloudflare account with your domain on Cloudflare DNS.
+- Node 20+.
+- `wrangler` (installed as a devDependency of this repo — `npx wrangler` works out of the box — or globally if you prefer).
+
+**Steps (in order)**
+
+1. **Clone, install, and log in to Cloudflare:**
+   ```bash
+   git clone https://github.com/ignaciohermosillacornejo/otp-please.git
+   cd otp-please
+   npm install
+   npx wrangler login
+   ```
+
+2. **Create the KV namespace** and paste the id into `wrangler.toml`:
+   ```bash
+   npx wrangler kv namespace create OTP_STORE
+   ```
+   The CLI prints an `id = "..."` line. Open `wrangler.toml` and replace `REPLACE_WITH_KV_NAMESPACE_ID` with that id.
+
+3. **Set personal values in `wrangler.toml`:**
+   - `TRUSTED_FORWARDER` — your Gmail address. This is the **only** sender the Worker will accept mail from; everything else is dropped.
+   - `TIMEZONE` — your IANA timezone. `America/Santiago` ships as the default — change it to your own (e.g. `America/New_York`, `Europe/Madrid`).
+   - `DASHBOARD_TITLE` — whatever you want at the top of the page (e.g. `"Family Codes"`).
+   - `FOOTER_TEXT` — optional line shown in the page footer. Leave as `""` if you don't want one.
+
+4. **Deploy the Worker:**
+   ```bash
+   npx wrangler deploy
+   ```
+
+5. **Cloudflare dashboard — Email Routing:**
+   - Go to *your domain → Email → Email Routing*.
+   - Enable it if it isn't already (this provisions the required MX records).
+   - Create a custom address `codes@<yourdomain>` that forwards to **your personal inbox** *temporarily*. This is only so the Gmail verification email in step 6 arrives somewhere you can read it. You'll change this destination in step 8.
+
+6. **Gmail — register the forwarding address:**
+   - Gmail → *Settings → Forwarding and POP/IMAP* → *Add a forwarding address* → enter `codes@<yourdomain>`.
+   - Gmail sends a verification code to that address. Cloudflare Email Routing forwards it to your inbox (per step 5). Copy the code and paste it back into Gmail.
+   - Once verified, **do NOT** enable automatic forwarding globally. You'll use a filter (step 7) so only OTP mails get forwarded.
+
+7. **Gmail — create the forwarding filter:**
+   - Gmail → *Settings → Filters and Blocked Addresses* → *Create a new filter*.
+   - Criteria (From):
+     ```
+     from:(info@account.netflix.com OR noreply@disneyplus.com OR no-reply@max.com OR account-update@amazon.com OR noreply@amazon.com)
+     ```
+     Add or remove senders to match the services you use; see `PATTERNS` in `src/parser.ts` for the authoritative list.
+   - Actions: **Forward it to `codes@<yourdomain>`** (pick the previously-verified address).
+   - **Do NOT check "Skip the Inbox".** You want the original email to stay in your inbox as an audit trail and manual fallback.
+   - Save.
+
+8. **Cloudflare dashboard — flip Email Routing to the Worker:**
+   - Back in *Email Routing*, edit the `codes@<yourdomain>` route.
+   - Change the destination from "Send to email" to "Send to Worker", and pick `otp-please`.
+   - Keep (or add) a catch-all `*@<yourdomain>` route pointing at your personal inbox as a safety net.
+
+9. **Cloudflare Access — protect the dashboard:**
+   - *Zero Trust → Access → Applications → Add an application → Self-hosted*.
+   - Application domain: your Worker's hostname (either the default `otp-please.<subdomain>.workers.dev` or a custom `codes.<yourdomain>` if you mapped one).
+   - Identity provider: Google Workspace OAuth is the easiest for a family setup.
+   - Policy: email allowlist containing the family Gmail addresses that should be able to see the dashboard.
+   - **Bypass rule:** path `/healthz` — exempt from auth so uptime monitors (and Cloudflare itself) can probe it without a cookie.
+
+10. **Trigger a test OTP** on one of the configured services (e.g. sign out of Netflix and sign back in). In a terminal, watch the live logs:
+    ```bash
+    npx wrangler tail
+    ```
+    You should see something like `info: stored code for netflix (valid 15m)`. Open the dashboard URL and confirm the code appears.
+
+## Adding a new service
+
+1. Add a new `Pattern` entry to `PATTERNS` in `src/parser.ts`. You need a `senderMatch` regex, either a `codeRegex` (for OTPs) or a `linkRegex` (for approval links), and a `validForMinutes`. Add a `bodyRequire` if the sender is shared across products (see the Amazon / Prime Video entry).
+2. Add the new service name to `SERVICE_KEYS` at the top of `src/parser.ts`. TypeScript enforces that `ServiceKey` stays in sync.
+3. Add a display-name + Tailwind accent colors to `SERVICE_META` in `src/dashboard.ts`, and add the service to `DISPLAY_ORDER` so the card shows up in the layout.
+4. Drop a sanitized `.eml` fixture into `test/fixtures/` and add a matching test in `test/parser.test.ts`. Fixtures use obviously-fake values like `FAKE_TRAVEL_TOKEN_0002` or sequential digits (`123456`).
+5. Update the Gmail filter in [setup step 7](#setup) to include the new sender address.
+6. `npm test` → `npx wrangler deploy`.
+
+## Debugging
+
+```bash
+# Follow live Worker logs (email + fetch):
+npx wrangler tail
+
+# List every KV entry:
+npx wrangler kv key list --binding=OTP_STORE
+
+# Read a specific entry:
+npx wrangler kv key get --binding=OTP_STORE entry:netflix
+```
+
+Common failure modes and what they mean:
+
+- **`skip: forwarder verification failed (envelope rejected)`** — the inbound message's `Authentication-Results` header did not contain an `spf=pass` with an `smtp.mailfrom` matching your configured `TRUSTED_FORWARDER`. Usually means the filter is forwarding from a different Gmail account than the one in `wrangler.toml`. Confirm in Gmail's filter settings.
+- **`skip: no pattern matched for "..." from ...`** — the sender address or body didn't match any entry in `PATTERNS`. The log includes the subject and parsed `from`; compare them against `src/parser.ts` and adjust the regex if the service has changed its email template.
+- **`err: KV write failed for <service>: ...`** — a transient KV put failure. The Worker does NOT retry on purpose (see the [Security model](#security-model) below) — the next email from the same service will simply overwrite the key. If you see this repeatedly, check Cloudflare status.
+- **Empty dashboard but `wrangler tail` shows stored entries** — either the codes already expired (their `valid_until` + 1 hour grace elapsed), or the KV namespace id in `wrangler.toml` doesn't match the one the dashboard binding reads from. Run `npx wrangler kv key list --binding=OTP_STORE` to confirm what's actually stored.
+
+## Security model
+
+### What this Worker trusts
+
+- **That mail arriving at `codes@<yourdomain>` was forwarded through your Gmail account.** This is verified by checking for `spf=pass` plus `smtp.mailfrom=<TRUSTED_FORWARDER>` in the inbound `Authentication-Results` header. Anyone who can forge Google's SPF can bypass this check; anyone who has compromised your Gmail account has bigger problems than a streaming code.
+- **That Cloudflare Email Routing strips any `Authentication-Results` header the sender tried to set themselves** and replaces it with its own, MTA-produced stanza. RFC 8601 §5.3 says a receiver SHOULD do this, and Cloudflare does in practice — without that, the check is trivially spoofable. See the comment block on `verifyForwarder` in `src/index.ts`.
+- **That Cloudflare Access reliably gates the `fetch()` handler**, except the `/healthz` bypass, and that your family members sign in with the configured OAuth identities.
+
+### What this Worker does NOT do
+
+- **No DKIM-alignment check** on the original streaming service's signature. The Gmail filter already handles sender selection; a deeper cryptographic check on the original Netflix/Disney/Max/Amazon signature is P2 work.
+- **No persistent state** beyond Workers KV entries. No user list, no history, no session tokens, no audit log. Cold starts have no in-memory carryover.
+- **No retry on failed KV writes.** Cloudflare will not re-invoke `email()` on a Worker exception, and that's on purpose — we'd rather drop a code than risk double-delivering one after a partial put.
+
+### Privacy notes
+
+- **Codes and household URLs are stored in KV plaintext.** KV is a shared secret between the Worker and the Cloudflare account owner. There is no additional at-rest encryption on top of what Cloudflare provides.
+- **Logs NEVER contain the extracted code or URL.** The Worker logs the service key, the match type, and the validity window — see the `console.log` calls in `src/index.ts`. This is enforced by code review, not by a lint rule.
+- **`GET /api` returns the raw entries, including `value`/`url`.** It's behind Cloudflare Access, but a future maintainer adding a new endpoint should be aware that the JSON snapshot is not redacted.
+- **The email subject is written into `StoredEntry.subject`.** Some services personalize subjects (e.g. `"Hi Ana, your code is..."`). This is acceptable for a solo family project where the account holder controls both the KV namespace and the dashboard viewer allowlist, but don't expose the dashboard more broadly without rethinking.
+
+## Known limitations
+
+Tracked as open follow-ups:
+
+- [#2](https://github.com/ignaciohermosillacornejo/otp-please/issues/2) — **Max sender regex is a guess.** The current pattern accepts both `@max.com` and legacy `@hbomax.com` / `@service.hbomax.com`; once we have real post-rebrand samples we should tighten it.
+- [#3](https://github.com/ignaciohermosillacornejo/otp-please/issues/3) — **Amazon / Prime Video matcher is over-broad.** Amazon uses a shared sender across many products; we currently narrow to Prime Video via a body substring check, but the `senderMatch` could be scoped further.
+- [#7](https://github.com/ignaciohermosillacornejo/otp-please/issues/7) — **CODE_CONTEXT budget may be too small for HTML-only bodies.** HTML emails with heavy markup between the keyword and the digits can fall outside the 40-char non-digit window.
+
+## Contributing
+
+PRs welcome. Run `npm test` (and `npm run typecheck`) before submitting. An AI review runs on every PR — see `.github/workflows/` for the CI setup, including the Claude-powered PR review and auto-merge flows. If you're adding a new service, please include a sanitized `.eml` fixture and a parser test.
+
+## License
+
+MIT — see [`LICENSE`](./LICENSE).
