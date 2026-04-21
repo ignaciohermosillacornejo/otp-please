@@ -63,10 +63,19 @@ export function verifyForwarder(
   const normalizedTrusted = normalizeAddress(trustedForwarder);
   if (!normalizedTrusted) return false;
 
+  // Strip RFC 8601 parenthetical comments before splitting. SPF-result
+  // parentheticals commonly contain commas
+  // (e.g. "spf=pass (google.com: domain of X designates Y as permitted
+  // sender, allow) smtp.mailfrom=..."), and splitting on `,` inside a
+  // comment would fragment a single stanza so neither fragment carries
+  // both spf=pass and smtp.mailfrom — dropping legitimate mail.
+  // Comments are documentation, not semantic, so removing them is safe.
+  const withoutComments = authResultsHeader.replace(/\([^)]*\)/g, '');
+
   // Split on both `;` (intra-header segmentation) and `,` (multiple
   // headers merged by Headers.get). Each resulting segment is checked
   // independently for an spf=pass + matching smtp.mailfrom pair.
-  const segments = authResultsHeader.split(/[;,]/);
+  const segments = withoutComments.split(/[;,]/);
   for (const segment of segments) {
     const spfMatch = segment.match(/\bspf=(\w+)/i);
     if (!spfMatch) continue;

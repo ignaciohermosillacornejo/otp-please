@@ -183,6 +183,21 @@ describe('verifyForwarder', () => {
     expect(verifyForwarder(header, 'owner@Example.COM')).toBe(true);
   });
 
+  it('handles a realistic Gmail header whose SPF-result comment contains a comma', () => {
+    // Real-world Gmail-forwarded Authentication-Results headers often
+    // embed a comma inside the SPF parenthetical comment, e.g.
+    // "spf=pass (google.com: domain of owner@example.com designates
+    // 209.85.220.41 as permitted sender, allow) smtp.mailfrom=...".
+    // The comma inside the comment must NOT fragment the stanza, or
+    // legitimate forwarded mail drops silently.
+    const header =
+      'mx.cloudflare.com; ' +
+      'dkim=pass header.i=@account.netflix.com; ' +
+      'spf=pass (google.com: domain of owner@example.com designates 209.85.220.41 as permitted sender, allow) smtp.mailfrom=owner@example.com; ' +
+      'dmarc=pass header.from=account.netflix.com';
+    expect(verifyForwarder(header, trusted)).toBe(true);
+  });
+
   it('returns false when TRUSTED_FORWARDER is empty/whitespace', () => {
     // Defensive: an empty TRUSTED_FORWARDER must NEVER cause a vacuous
     // match. Blank string must not equal blank mailfrom, etc.

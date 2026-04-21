@@ -180,7 +180,7 @@ function renderHouseholdCard(
     `  <p class="text-xs text-amber-300 bg-amber-900/30 border border-amber-800 rounded-md p-3 leading-relaxed">`,
     `    This link only works from a device on the home network. If you're traveling, ask someone at home to open this dashboard and tap the link.`,
     `  </p>`,
-    `  <a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener" `,
+    `  <a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer" `,
     `     class="block text-center font-semibold text-white bg-red-700 hover:bg-red-600 rounded-md py-3 px-4 transition-colors">`,
     `    Open household link`,
     `  </a>`,

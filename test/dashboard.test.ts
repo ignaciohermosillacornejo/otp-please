@@ -210,7 +210,10 @@ describe('renderDashboard — household entries', () => {
       'href="https://www.netflix.com/account/travel/OPAQUE-TOKEN"',
     );
     expect(html).toContain('target="_blank"');
-    expect(html).toContain('rel="noopener"');
+    // noopener prevents window.opener access; noreferrer additionally
+    // suppresses the Referer header so the target doesn't see the
+    // Access-gated dashboard URL.
+    expect(html).toContain('rel="noopener noreferrer"');
     expect(html).toContain(
       'This link only works from a device on the home network',
     );
