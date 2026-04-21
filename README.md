@@ -79,7 +79,6 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
    The CLI prints an `id = "..."` line. Open `wrangler.toml` and replace `REPLACE_WITH_KV_NAMESPACE_ID` with that id.
 
 3. **Set personal values in `wrangler.toml`:**
-   - `TRUSTED_FORWARDER` — your Gmail address. This is the **only** sender the Worker will accept mail from; everything else is dropped.
    - `TIMEZONE` — your IANA timezone. `America/Santiago` ships as the default — change it to your own (e.g. `America/New_York`, `Europe/Madrid`).
    - `DASHBOARD_TITLE` — whatever you want at the top of the page (e.g. `"Family Codes"`).
    - `FOOTER_TEXT` — optional line shown in the page footer. Leave as `""` if you don't want one.
@@ -90,17 +89,23 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
    npx wrangler deploy
    ```
 
-5. **Cloudflare dashboard — Email Routing:**
+5. **Set your trusted forwarder as a Worker secret** (kept out of git so your Gmail address isn't in the commit history):
+   ```bash
+   npx wrangler secret put TRUSTED_FORWARDER
+   ```
+   Paste your Gmail address (e.g. `you@gmail.com`) when prompted. This is the **only** sender the Worker will accept mail from; everything else is dropped. At runtime `env.TRUSTED_FORWARDER` resolves to this value just like a regular `[vars]` entry. If you forget this step, every incoming mail will be rejected and you'll see `skip: forwarder verification failed` in `wrangler tail`.
+
+6. **Cloudflare dashboard — Email Routing:**
    - Go to *your domain → Email → Email Routing*.
    - Enable it if it isn't already (this provisions the required MX records).
-   - Create a custom address `codes@<yourdomain>` that forwards to **your personal inbox** *temporarily*. This is only so the Gmail verification email in step 6 arrives somewhere you can read it. You'll change this destination in step 8.
+   - Create a custom address `codes@<yourdomain>` that forwards to **your personal inbox** *temporarily*. This is only so the Gmail verification email in step 7 arrives somewhere you can read it. You'll change this destination in step 9.
 
-6. **Gmail — register the forwarding address:**
+7. **Gmail — register the forwarding address:**
    - Gmail → *Settings → Forwarding and POP/IMAP* → *Add a forwarding address* → enter `codes@<yourdomain>`.
-   - Gmail sends a verification code to that address. Cloudflare Email Routing forwards it to your inbox (per step 5). Copy the code and paste it back into Gmail.
-   - Once verified, **do NOT** enable automatic forwarding globally. You'll use a filter (step 7) so only OTP mails get forwarded.
+   - Gmail sends a verification code to that address. Cloudflare Email Routing forwards it to your inbox (per step 6). Copy the code and paste it back into Gmail.
+   - Once verified, **do NOT** enable automatic forwarding globally. You'll use a filter (step 8) so only OTP mails get forwarded.
 
-7. **Gmail — create the forwarding filter:**
+8. **Gmail — create the forwarding filter:**
    - Gmail → *Settings → Filters and Blocked Addresses* → *Create a new filter*.
    - Criteria (From):
      ```
@@ -111,19 +116,19 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
    - **Do NOT check "Skip the Inbox".** You want the original email to stay in your inbox as an audit trail and manual fallback.
    - Save.
 
-8. **Cloudflare dashboard — flip Email Routing to the Worker:**
+9. **Cloudflare dashboard — flip Email Routing to the Worker:**
    - Back in *Email Routing*, edit the `codes@<yourdomain>` route.
    - Change the destination from "Send to email" to "Send to Worker", and pick `otp-please`.
    - Keep (or add) a catch-all `*@<yourdomain>` route pointing at your personal inbox as a safety net.
 
-9. **Cloudflare Access — protect the dashboard:**
-   - *Zero Trust → Access → Applications → Add an application → Self-hosted*.
-   - Application domain: your Worker's hostname (either the default `otp-please.<subdomain>.workers.dev` or a custom `codes.<yourdomain>` if you mapped one).
-   - Identity provider: Google Workspace OAuth is the easiest for a family setup.
-   - Policy: email allowlist containing the family Gmail addresses that should be able to see the dashboard.
-   - **Bypass rule:** path `/healthz` — exempt from auth so uptime monitors (and Cloudflare itself) can probe it without a cookie.
+10. **Cloudflare Access — protect the dashboard:**
+    - *Zero Trust → Access → Applications → Add an application → Self-hosted*.
+    - Application domain: your Worker's hostname (either the default `otp-please.<subdomain>.workers.dev` or a custom `codes.<yourdomain>` if you mapped one).
+    - Identity provider: Google Workspace OAuth is the easiest for a family setup.
+    - Policy: email allowlist containing the family Gmail addresses that should be able to see the dashboard.
+    - **Bypass rule:** path `/healthz` — exempt from auth so uptime monitors (and Cloudflare itself) can probe it without a cookie.
 
-10. **Trigger a test OTP** on one of the configured services (e.g. sign out of Netflix and sign back in). In a terminal, watch the live logs:
+11. **Trigger a test OTP** on one of the configured services (e.g. sign out of Netflix and sign back in). In a terminal, watch the live logs:
     ```bash
     npx wrangler tail
     ```
@@ -135,7 +140,7 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
 2. Add the new service name to `SERVICE_KEYS` at the top of `src/parser.ts`. TypeScript enforces that `ServiceKey` stays in sync.
 3. Add a display-name + Tailwind accent colors to `SERVICE_META` in `src/dashboard.ts`, and add the service to `DISPLAY_ORDER` so the card shows up in the layout.
 4. Drop a sanitized `.eml` fixture into `test/fixtures/` and add a matching test in `test/parser.test.ts`. Fixtures use obviously-fake values like `FAKE_TRAVEL_TOKEN_0002` or sequential digits (`123456`).
-5. Update the Gmail filter in [setup step 7](#setup) to include the new sender address.
+5. Update the Gmail filter in [setup step 8](#setup) to include the new sender address.
 6. `npm test` → `npx wrangler deploy`.
 
 ## Debugging
@@ -153,7 +158,7 @@ npx wrangler kv key get --binding=OTP_STORE entry:netflix
 
 Common failure modes and what they mean:
 
-- **`skip: forwarder verification failed (envelope rejected)`** — the inbound message's `Authentication-Results` header did not contain an `spf=pass` with an `smtp.mailfrom` matching your configured `TRUSTED_FORWARDER`. Usually means the filter is forwarding from a different Gmail account than the one in `wrangler.toml`. Confirm in Gmail's filter settings.
+- **`skip: forwarder verification failed (envelope rejected)`** — the inbound message's `Authentication-Results` header did not contain an `spf=pass` with an `smtp.mailfrom` matching your configured `TRUSTED_FORWARDER`. Either the secret isn't set (run `npx wrangler secret put TRUSTED_FORWARDER`), or the filter is forwarding from a different Gmail account than the one you configured. Confirm in Gmail's filter settings.
 - **`skip: no pattern matched for "..." from ...`** — the sender address or body didn't match any entry in `PATTERNS`. The log includes the subject and parsed `from`; compare them against `src/parser.ts` and adjust the regex if the service has changed its email template.
 - **`err: KV write failed for <service>: ...`** — a transient KV put failure. The Worker does NOT retry on purpose (see the [Security model](#security-model) below) — the next email from the same service will simply overwrite the key. If you see this repeatedly, check Cloudflare status.
 - **Empty dashboard but `wrangler tail` shows stored entries** — either the codes already expired (their `valid_until` + 1 hour grace elapsed), or the KV namespace id in `wrangler.toml` doesn't match the one the dashboard binding reads from. Run `npx wrangler kv key list --binding=OTP_STORE` to confirm what's actually stored.
