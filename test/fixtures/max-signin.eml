@@ -1,36 +1,384 @@
-From: Max <noreply@max.com>
+Delivered-To: codes@example.com
+Authentication-Results: mx.example.com;
+       dkim=pass header.i=@<original-d> header.s=fake-selector;
+       spf=pass smtp.mailfrom=<bounce@example.invalid>;
+       dmarc=pass
+From: HBO Max <no-reply@alerts.hbomax.com>
 To: codes@example.com
-Subject: Your Max verification code
-Date: Sat, 19 Apr 2026 14:12:03 +0000
-Message-ID: <max-signin-001@max.com>
+Subject: Time Sensitive: Your One-Time HBO Max Code
+Date: Mon, 01 Jan 2026 12:00:00 +0000
+Message-ID: <max-signin-001@example.com>
 MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="boundary-max-signin"
+Content-Type: multipart/alternative; boundary="----=_FixtureBoundary_3c6d61782d736967"
 
---boundary-max-signin
+------=_FixtureBoundary_3c6d61782d736967
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hello,
+Enter your code now.
 
-Use the verification code below to finish signing in to Max:
 
-234567
+******************
+Your One-Time Code
+******************
 
-This code is valid for 15 minutes.
+222222
 
-Thanks,
-The Max team
+This code expires in 30 minutes. If it expires before you use it,
+request a new code.
 
---boundary-max-signin
+Did you not make this change? Visit our Help Center 
+( https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN ).
+
+
+
+
+Fb (
+https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN
+) Tw (
+https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN
+) Ig (
+https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN
+) Tt (
+https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN
+)           230 Park Avenue South, New York, NY 10003
+
+hbomax.com 
+( https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN )
+ | Privacy Policy (
+https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN
+) | Help Center (
+https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN
+)
+
+This email was sent from a notification-only address that cannot accept incoming email.<br /> Please do not reply to this message.
+
+
+
+------=_FixtureBoundary_3c6d61782d736967
 Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-<html><body>
-<p>Hello,</p>
-<p>Use the verification code below to finish signing in to Max:</p>
-<p style="font-size:28px;letter-spacing:6px;">234567</p>
-<p>This code is valid for 15 minutes.</p>
-<p>Thanks,<br>The Max team</p>
-</body></html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
+ <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta content="telephone=no" name="format-detection">
+  <title>Time Sensitive: Your One-Time HBO Max Code</title>
+<!--[if (mso 16)]>
+    <style type="text/css">
+    a {text-decoration: none;}
+    </style>
+    <![endif]--><!--[if gte mso 9]><style>sup { font-size: 100% !important; }</style><![endif]--><!--[if gte mso 9]>
+<noscript>
+         <xml>
+           <o:OfficeDocumentSettings>
+           <o:AllowPNG></o:AllowPNG>
+           <o:PixelsPerInch>96</o:PixelsPerInch>
+           </o:OfficeDocumentSettings>
+         </xml>
+      </noscript>
+<![endif]--><!--[if mso]><xml>
+    <w:WordDocument xmlns:w="urn:schemas-microsoft-com:office:word">
+      <w:DontUseAdvancedTypographyReadingMail/>
+    </w:WordDocument>
+    </xml><![endif]--><!--[if !mso]><!-- -->
+  <link href="https://newsletter.assets.hbonow.com/fonts/proximanova/proximanova.css" rel="stylesheet">
+<!--<![endif]-->
+  <style type="text/css">@font-face {
+            font-display: swap;
+            font-family: "Max";
+            font-style: normal;
+            font-weight: normal;
+            src: url("https://braze-images.com/appboy/communication/assets/font_assets/files/642c4c6a371376108c7283da/original.woff2") format("woff2"),
+                url("https://braze-images.com/appboy/communication/assets/font_assets/files/642c4c6a5d6d2b7e19be789d/original.woff") format("woff"),
+                url("https://braze-images.com/appboy/communication/assets/font_assets/files/642c4c6a13d15a45abd81a34/original.ttf") format("truetype");
+        }
+        @font-face {
+            font-display: swap;
+            font-family: "Max";
+            font-style: normal;
+            font-weight: bold;
+            src: url("https://braze-images.com/appboy/communication/assets/font_assets/files/642c4c6ae9083c676626406c/original.woff2") format("woff2"),
+                url("https://braze-images.com/appboy/communication/assets/font_assets/files/642c4c6a41a20f77bbd94f11/original.woff") format("woff"),
+                url("https://braze-images.com/appboy/communication/assets/font_assets/files/642c4c6a273b8254648ee800/original.ttf") format("truetype");
+        }
+        p,
+        [style*="font-family"] {
+            font-family: Max, 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+        }
+.rollover:hover .rollover-first {
+  max-height:0px!important;
+  display:none!important;
+}
+.rollover:hover .rollover-second {
+  max-height:none!important;
+  display:block!important;
+}
+.rollover span {
+  font-size:0px;
+}
+u + .body img ~ div div {
+  display:none;
+}
+#outlook a {
+  padding:0;
+}
+span.MsoHyperlink,
+span.MsoHyperlinkFollowed {
+  color:inherit;
+  mso-style-priority:99;
+}
+a.d {
+  mso-style-priority:100!important;
+  text-decoration:none!important;
+}
+a[x-apple-data-detectors],
+#MessageViewBody a {
+  color:inherit!important;
+  text-decoration:none!important;
+  font-size:inherit!important;
+  font-family:inherit!important;
+  font-weight:inherit!important;
+  line-height:inherit!important;
+}
+.h {
+  display:none;
+  float:left;
+  overflow:hidden;
+  width:0;
+  max-height:0;
+  line-height:0;
+  mso-hide:all;
+}
+.w:hover a.d,
+.w:hover button.d,
+.w:hover label.d {
+  color:#002be7!important;
+}
+@media only screen and (max-width:600px) {.bi { padding-right:20px!important } .bh { padding-left:20px!important }  *[class="gmail-fix"] { display:none!important } p, a { line-height:110%!important } h1, h1 a { line-height:110%!important } h2, h2 a { line-height:110%!important } h3, h3 a { line-height:110%!important } h4, h4 a { line-height:120%!important } h5, h5 a { line-height:120%!important } h6, h6 a { line-height:120%!important }  .be p { }   h1 { font-size:30px!important; text-align:center } h2 { font-size:28px!important; text-align:left } h3 { font-size:18px!important; text-align:left } h4 { font-size:24px!important; text-align:left } h5 { font-size:20px!important; text-align:left } h6 { font-size:16px!important; text-align:left }         .be p, .be a { font-size:20px!important }        .y .rollover:hover .rollover-second, .z .rollover:hover .rollover-second, .ba .rollover:hover .rollover-second { display:inline!important }        .m table, .n table, .o table, .m, .o, .n { width:100%!important; max-width:600px!important } .adapt-img { width:100%!important; height:auto!important }  .j, .k { display:none!important }         .h-auto { height:auto!important }  a.button-small { padding:7px 5px 3px!important; font-size:15px!important } a.button-small-2 { font-size:10px!important; padding:6px 5px 4px!important } a.button-m-custom { padding:10px 55px 6px!important } a.button-m-custom-w { padding:7px 52px 4px!important } a.button-m { padding:10px 0 10px 0!important } .buttom-m-nofull { display:inline-block!important } a.cta_img { font-size:14px!important } a.cta-m-black { font-size:12px!important } .a .b.c, .a .b.c * { font-size:24px!important; line-height:110%!important } }
+@media screen and (max-width:384px) {.mail-message-content { width:414px!important } }</style>
+ </head>
+ <body data-new-gr-c-s-loaded="14.1135.0" class="body" style="width:100%;height:100%;font-family:arial, 'helvetica neue', helvetica, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0">
+<div style="display:none !important;visibility:hidden;mso-hide:all;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">Enter your code now.</div>
+  <div dir="ltr" class="es-wrapper-color" lang="en" style="background-color:#F6F6F6">
+<!--[if gte mso 9]>
+			<v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
+				<v:fill type="tile" color="#f6f6f6"></v:fill>
+			</v:background>
+		<![endif]-->
+   <table width="100%" cellspacing="0" cellpadding="0" class="es-wrapper" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;padding:0;Margin:0;width:100%;height:100%;background-repeat:repeat;background-position:center top;background-color:#F6F6F6">
+     <tr>
+      <td valign="top" style="padding:0;Margin:0">
+       <table align="center" cellpadding="0" cellspacing="0" class="m" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important">
+         <tr>
+          <td align="center" style="padding:0;Margin:0">
 
---boundary-max-signin--
+<table cellpadding="0" cellspacing="0" class="co" align="center" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;background-color:transparent;background-repeat:repeat;background-position:center top">
+         <tr>
+          <td align="center" style="padding:0;Margin:0">
+           <table class="da" cellspacing="0" cellpadding="0" bgcolor="#000000" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#000000;width:600px" role="none">
+             <tr>
+              <td align="left" style="padding:0;Margin:0">
+               <table width="100%" cellspacing="0" cellpadding="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                 <tr>
+                  <td valign="top" align="center" style="padding:0;Margin:0;width:600px">
+                   <table width="100%" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#ffffff" role="presentation">
+                     <tr>
+                      <td align="center" style="padding:0;Margin:0;font-size:0px"><a universal="true" target="_blank" href="https://ablink.alerts.hbomax.com/uni/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:underline;"><img class="adapt-img" src="https://braze-images.com/appboy/communication/assets/image_assets/images/68471f520832b80064aae8f1/original.png?1749491538" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="100"></a></td>
+                     </tr>
+                   </table>
+</td>
+                 </tr>
+               </table>
+</td>
+             </tr>
+           </table>
+</td>
+         </tr>
+       </table>
+</td>
+         </tr>
+       </table>
+       <table cellspacing="0" align="center" cellpadding="0" class="m" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important">
+         <tr>
+          <td align="center" style="padding:0;Margin:0">
+           <table cellpadding="0" bgcolor="#ffffff" align="center" cellspacing="0" class="be" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+             <tr>
+              <td align="left" style="padding:0;Margin:0;padding-right:20px;padding-left:20px">
+               <table cellpadding="0" width="100%" cellspacing="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                 <tr>
+                  <td valign="top" align="center" style="padding:0;Margin:0;width:560px">
+                   <table cellpadding="0" width="100%" cellspacing="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                     <tr class="j">
+                      <td align="center" height="5" style="padding:0;Margin:0"></td>
+                     </tr>
+                     <tr>
+                      <td height="10" align="center" style="padding:0;Margin:0"></td>
+                     </tr>
+                     <tr>
+                      <td align="left" class="a" style="padding:0;Margin:0"><h1 class="b c" style="Margin:0;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:48px;font-style:normal;font-weight:normal;line-height:57.6px;color:#000000;text-align:center"><strong style="font-weight:700 !important">Your One-Time Code</strong></h1></td>
+                     </tr>
+                     <tr class="j">
+                      <td height="5" align="center" style="padding:0;Margin:0"></td>
+                     </tr>
+                     <tr>
+                      <td align="center" height="10" style="padding:0;Margin:0"></td>
+                     </tr>
+                   </table>
+</td>
+                 </tr>
+               </table>
+</td>
+             </tr>
+           </table>
+</td>
+         </tr>
+       </table>
+       <table align="center" cellpadding="0" cellspacing="0" class="m" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important">
+         <tr>
+          <td align="center" style="padding:0;Margin:0">
+           <table cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center" class="be" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+             <tr>
+              <td align="left" style="padding:0;Margin:0;padding-right:20px;padding-left:20px">
+               <table width="100%" cellspacing="0" cellpadding="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                 <tr>
+                  <td valign="top" align="center" style="padding:0;Margin:0;width:560px">
+                   <table cellspacing="0" cellpadding="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                     <tr>
+                      <td align="center" height="15" style="padding:0;Margin:0"></td>
+                     </tr>
+                   </table>
+</td>
+                 </tr>
+               </table>
+</td>
+             </tr>
+           </table>
+</td>
+         </tr>
+       </table>
+       <table cellpadding="0" cellspacing="0" align="center" class="m" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important">
+         <tr>
+          <td align="center" style="padding:0;Margin:0">
+           <table align="center" cellspacing="0" cellpadding="0" bgcolor="#ffffff" class="be" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+             <tr>
+              <td align="left" style="padding:0;Margin:0">
+               <table width="100%" cellpadding="0" cellspacing="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                 <tr>
+                  <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
+                   <table cellspacing="0" width="100%" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                     <tr>
+                      <td align="center" class="bi bh" style="padding:0;Margin:0;padding-right:30px;padding-left:30px"><p style="Margin:0;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:43.2px;letter-spacing:0;color:#000000;font-size:20px"><span style="font-size:36px"><b>222222</b></span><br><br>This code expires in 30 minutes. If it expires before you use it, request a new code.</p></td>
+                     </tr>
+                     <tr class="j">
+                      <td height="10" align="center" style="padding:0;Margin:0"></td>
+                     </tr>
+                     <tr>
+                      <td align="center" class="bi bh" style="padding:0;Margin:0;padding-right:30px;padding-left:30px"><p style="Margin:0;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:24px;letter-spacing:0;color:#000000;font-size:20px"><br>Did you not make this change? Visit our <strong style="font-weight:700 !important"><a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" target="_blank" style="mso-line-height-rule:exactly;text-decoration:none;color:#3d6a99;font-size:20px;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif">Help Center</a></strong>.<br></p></td>
+                     </tr>
+                   </table>
+</td>
+                 </tr>
+               </table>
+</td>
+             </tr>
+           </table>
+</td>
+         </tr>
+       </table>
+       <table align="center" cellpadding="0" cellspacing="0" class="m" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important">
+         <tr>
+          <td align="center" style="padding:0;Margin:0"> 
+ <!--Textos-->       <!--Links-->        
+
+<table align="center" bgcolor="#ffffff" cellpadding="0" cellspacing="0" class="es-footer-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#ffffff;width:600px">
+	<tbody>
+		<tr>
+			<td align="left" bgcolor="#ffffff" style="padding:0;Margin:0;background-color:#ffffff">
+			<table cellpadding="0" cellspacing="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px" width="100%">
+				<tbody>
+					<tr>
+						<td align="center" style="padding:0;Margin:0;width:600px" valign="top">
+						<table bgcolor="transparent" cellpadding="0" cellspacing="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:transparent" width="100%">
+							<tbody>
+								<tr>
+									<td align="center" height="25" style="padding:0;Margin:0"></td>
+								</tr>
+								<tr>
+									<td align="center" class="es-m-p15" style="padding:0;Margin:0;font-size:0px"><img alt="" class="adapt-img" src="https://braze-images.com/appboy/communication/assets/image_assets/images/67d1a636add1f40064ee2f63/original.png?1741792822" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="540"></td>
+								</tr>
+								<tr>
+									<td align="center" height="50" style="padding:0;Margin:0"></td>
+								</tr>
+								<tr>
+									<td align="center" style="padding:0;Margin:0;padding-bottom:15px;font-size:0">
+									<table cellpadding="0" cellspacing="0" class="es-table-not-adapt es-social" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+										<tbody>
+											<tr>
+												<td align="center" style="padding:0;Margin:0;padding-right:20px" valign="top"><a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:underline;color:#FFFFFF;font-size:14px" target="_blank"><img alt="Fb" height="25" src="https://braze-images.com/appboy/communication/assets/image_assets/images/67d1b094694e5300659379c3/original.png?1741795476" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" title="Facebook" width="25"></a></td>
+												<td align="center" style="padding:0;Margin:0;padding-right:20px" valign="top"><a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:underline;color:#FFFFFF;font-size:14px" target="_blank"><img alt="Tw" height="25" src="https://braze-images.com/appboy/communication/assets/image_assets/images/67d1b09485f0a8006450821b/original.png?1741795476" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" title="Twitter" width="25"></a></td>
+												<td align="center" style="padding:0;Margin:0;padding-right:20px" valign="top"><a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:underline;color:#FFFFFF;font-size:14px" target="_blank"><img alt="Ig" height="25" src="https://braze-images.com/appboy/communication/assets/image_assets/images/67d1b094a8a4890064431641/original.png?1741795476" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" title="Instagram" width="25"></a></td>
+												<td align="center" style="padding:0;Margin:0" valign="top"><a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:underline;color:#FFFFFF;font-size:14px" target="_blank"><img alt="Tt" height="25" src="https://braze-images.com/appboy/communication/assets/image_assets/images/67d1b0940c5fbc0064227828/original.png?1741795476" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" title="TikTok" width="25"></a></td>
+											</tr>
+										</tbody>
+									</table>
+									</td>
+								</tr>
+								<tr>
+									<td align="center" height="5" style="padding:0;Margin:0"></td>
+								</tr>
+								<tr>
+									<td align="center" class="es-m-p0b" style="padding:0;Margin:0;padding-bottom:5px">
+									<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:15px;color:#000000;font-size:14px">230 Park Avenue South, New York, NY 10003</p>
+									</td>
+								</tr>
+								<tr>
+									<td align="center" height="10" style="padding:0;Margin:0"></td>
+								</tr>
+								<tr>
+									<td align="center" style="padding:0;Margin:0">
+									<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:15px;color:#000000;font-size:14px"><a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#000000;font-size:14px;text-size-adjust:none;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif" target="_blank">hbomax.com</a> | <a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#000000;font-size:14px;text-size-adjust:none;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif" target="_blank">Privacy Policy</a> | <a href="https://ablink.alerts.hbomax.com/ls/click?upn=u001.FAKE_TRACKING_TOKEN" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#000000;font-size:14px;text-size-adjust:none;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif" target="_blank">Help Center</a></p>
+									</td>
+								</tr>
+								<tr>
+									<td align="center" height="15" style="padding:0;Margin:0"></td>
+								</tr>
+								<tr>
+									<td align="center" style="padding:0;Margin:0">
+									<p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:11px;color:#000000;font-size:10px">This email was sent from a notification-only address that cannot accept incoming email.<br />
+Please do not reply to this message.</p>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			</tr>
+<tr>
+				<td align="center" height="35" style="padding:0;Margin:0"></td>
+			</tr>
+		
+	</tbody>
+</table>
+</td>
+         </tr>
+       </table>
+</td>
+     </tr>
+   </table>
+  </div>
+ <img src="https://ablink.alerts.hbomax.com/wf/open?upn=u001.FAKE_TRACKING_TOKEN" alt="" width="1" height="1" border="0" style="height:1px !important;width:1px !important;border-width:0 !important;margin-top:0 !important;margin-bottom:0 !important;margin-right:0 !important;margin-left:0 !important;padding-top:0 !important;padding-bottom:0 !important;padding-right:0 !important;padding-left:0 !important;"/></body>
+</html>
+
+
+------=_FixtureBoundary_3c6d61782d736967--

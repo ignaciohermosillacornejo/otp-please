@@ -29,7 +29,6 @@ const EXPIRED_90S_AGO = new Date(NOW.getTime() - 90 * 1000).toISOString();
 
 function emptyEntries(): Record<ServiceKey, StoredEntry | null> {
   return {
-    netflix: null,
     'netflix-household': null,
     disney: null,
     max: null,
@@ -49,9 +48,8 @@ function defaultData(
 }
 
 describe('DISPLAY_ORDER', () => {
-  it('lists the four supported services in the documented order', () => {
+  it('lists the three supported services in the documented order', () => {
     expect(DISPLAY_ORDER).toEqual([
-      'netflix',
       'netflix-household',
       'disney',
       'max',
@@ -113,21 +111,20 @@ describe('renderDashboard — structure and ordering', () => {
     const html = renderDashboard(defaultData());
     // Match the display-name headings — one per service.
     expect(html).toContain('>Netflix<');
-    expect(html).toContain('>Netflix Household<');
     expect(html).toContain('>Disney+<');
     expect(html).toContain('>Max<');
+    // Dropped services must NOT render a card.
+    expect(html).not.toContain('>Netflix Household<');
     expect(html).not.toContain('>Prime Video<');
   });
 
-  it('renders cards in DISPLAY_ORDER (netflix before household before disney before max)', () => {
+  it('renders cards in DISPLAY_ORDER (netflix before disney before max)', () => {
     const html = renderDashboard(defaultData());
     const idxNetflix = html.indexOf('>Netflix<');
-    const idxHousehold = html.indexOf('>Netflix Household<');
     const idxDisney = html.indexOf('>Disney+<');
     const idxMax = html.indexOf('>Max<');
     expect(idxNetflix).toBeGreaterThan(-1);
-    expect(idxNetflix).toBeLessThan(idxHousehold);
-    expect(idxHousehold).toBeLessThan(idxDisney);
+    expect(idxNetflix).toBeLessThan(idxDisney);
     expect(idxDisney).toBeLessThan(idxMax);
   });
 });
@@ -135,23 +132,23 @@ describe('renderDashboard — structure and ordering', () => {
 describe('renderDashboard — code entries', () => {
   it('renders the code as data-code and as visible text, with countdown and received-ago spans', () => {
     const entries = emptyEntries();
-    entries.netflix = {
+    entries.max = {
       type: 'code',
-      service: 'netflix',
-      value: '1234',
+      service: 'max',
+      value: '123456',
       received_at: RECEIVED_THREE_MIN_AGO,
       valid_until: VALID_UNTIL_FIVE_MIN,
-      subject: 'Your Netflix sign-in code',
+      subject: 'Your Max sign-in code',
     };
 
     const html = renderDashboard(defaultData({ entries }));
 
     // Tap-to-copy button has the code as both data-code and body text.
-    expect(html).toContain('data-code="1234"');
+    expect(html).toContain('data-code="123456"');
     expect(html).toContain('onclick="copy(this)"');
     // The digit string appears in the visible <button> body (plus the
     // data-code attribute — two occurrences is fine).
-    expect(html.match(/1234/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(html.match(/123456/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
 
     // data-valid-until + data-received-at expose ISO strings to the client tick().
     expect(html).toContain(`data-valid-until="${VALID_UNTIL_FIVE_MIN}"`);
@@ -189,7 +186,7 @@ describe('renderDashboard — code entries', () => {
 });
 
 describe('renderDashboard — household entries', () => {
-  it('renders the URL as href and shows the home-network warning', () => {
+  it('renders the URL as an open-link anchor with hardened rel attributes', () => {
     const entries = emptyEntries();
     entries['netflix-household'] = {
       type: 'household',
@@ -197,7 +194,7 @@ describe('renderDashboard — household entries', () => {
       url: 'https://www.netflix.com/account/travel/OPAQUE-TOKEN',
       received_at: RECEIVED_JUST_NOW,
       valid_until: VALID_UNTIL_FIVE_MIN,
-      subject: 'Your Netflix Household request',
+      subject: 'Your Netflix temporary access code',
     };
 
     const html = renderDashboard(defaultData({ entries }));
@@ -210,12 +207,9 @@ describe('renderDashboard — household entries', () => {
     // suppresses the Referer header so the target doesn't see the
     // Access-gated dashboard URL.
     expect(html).toContain('rel="noopener noreferrer"');
-    expect(html).toContain(
-      'This link only works from a device on the home network',
-    );
-    expect(html).toContain(
-      "If you're traveling, ask someone at home to open this dashboard and tap the link.",
-    );
+    // The P1 home-network warning was removed; confirm it's gone so
+    // a future reintroduction is deliberate.
+    expect(html).not.toContain('only works from a device on the home network');
     // Countdown + received spans present on household cards too.
     expect(html).toContain(`data-valid-until="${VALID_UNTIL_FIVE_MIN}"`);
     expect(html).toContain(`data-received-at="${RECEIVED_JUST_NOW}"`);
@@ -223,10 +217,12 @@ describe('renderDashboard — household entries', () => {
 });
 
 describe('renderDashboard — empty states', () => {
-  it('renders "no recent code" for non-household services with null entries', () => {
+  it('renders "no recent code" for disney and max (household has its own empty copy)', () => {
     const html = renderDashboard(defaultData());
-    // "no recent code" appears for netflix, disney, max — three times.
-    expect(html.match(/no recent code/g)?.length).toBe(3);
+    // "no recent code" appears for disney and max. Netflix (household)
+    // uses "no household request pending" instead.
+    expect(html.match(/no recent code/g)?.length).toBe(2);
+    expect(html).toContain('no household request pending');
   });
 
   it('renders "no household request pending" for netflix-household with null entry', () => {
@@ -245,9 +241,9 @@ describe('renderDashboard — HTML escaping', () => {
     const entries = emptyEntries();
     // Nonsensical but defensive: if the parser ever extracted something
     // weird, it must not land in the page as live markup.
-    entries.netflix = {
+    entries.disney = {
       type: 'code',
-      service: 'netflix',
+      service: 'disney',
       value: '"><script>alert(1)</script>',
       received_at: RECEIVED_JUST_NOW,
       valid_until: VALID_UNTIL_FIVE_MIN,

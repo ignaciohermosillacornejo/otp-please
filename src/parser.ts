@@ -1,19 +1,13 @@
 // Parser module: inspects a ParsedEmail (subject/from/body) and decides
 // which streaming service sent it and whether it contains an OTP code or a
 // household-verification link.
-//
-// Pattern ordering note: `netflix-household` is deliberately listed BEFORE
-// `netflix` so that a household/travel email matches the household pattern
-// first. The plain `netflix` pattern still uses a `subjectBlocklist` as a
-// belt-and-suspenders guard, but ordering makes the intent explicit and
-// robust to future subject-line changes.
 
 // Single source of truth for the full set of service keys. `ServiceKey`
 // is DERIVED from this tuple, so adding a new service to the union
 // without also adding it to SERVICE_KEYS is impossible — kv.ts and the
 // dashboard iterate SERVICE_KEYS to cover every ServiceKey, and a
 // drift here would silently omit the new service.
-export const SERVICE_KEYS = ['netflix', 'netflix-household', 'disney', 'max'] as const;
+export const SERVICE_KEYS = ['netflix-household', 'disney', 'max'] as const;
 
 export type ServiceKey = (typeof SERVICE_KEYS)[number];
 
@@ -47,16 +41,25 @@ export type MatchResult =
   | { service: ServiceKey; type: 'household'; value: string; validForMinutes: number };
 
 // Shared fragment used to find a verification code inside the body. The
-// code must be preceded by a recognized contextual word (English or
-// Spanish, since this user's family emails mix languages) so that
-// incidental 4- or 6-digit sequences like copyright years, postal codes,
-// or order numbers don't false-match. `[^\d]{0,40}` allows up to 40 non-
-// digit chars between the keyword and the digits to accommodate typical
-// email phrasing ("Your sign-in code is 1234", "código de verificación: 1234").
-const CODE_CONTEXT = /(?:code|passcode|pin|verification|c[óo]digo|clave|verificaci[óo]n)[^\d]{0,40}/i;
+// code must be preceded somewhere before it by a recognized contextual
+// word (English or Spanish — this user's family emails mix the two) so
+// that incidental digit runs like copyright years or promotion numbers
+// don't false-match.
+//
+// We use a LAZY `[\s\S]{0,500}?` between the context word and the code
+// — not `[^\d]{0,N}` — because real HTML templates often contain
+// intermediate digit fragments (e.g. "...expire en 15 minutos. <code>",
+// "Order 123456 · código <real>"). A strict non-digit gap would fail
+// on those. The `(?<![\d])` / `(?![\d])` boundaries around the capture
+// group prevent grabbing a sub-sequence of a longer digit run (phone
+// numbers, order ids, etc.).
+const CODE_CONTEXT = /(?:code|passcode|pin|verification|c[óo]digo|clave|verificaci[óo]n)/i;
 
 function codeOf(digits: 4 | 6): RegExp {
-  return new RegExp(`${CODE_CONTEXT.source}(\\d{${digits}})\\b`, 'i');
+  return new RegExp(
+    `${CODE_CONTEXT.source}[\\s\\S]{0,500}?(?<![\\d])(\\d{${digits}})(?![\\d])`,
+    'i',
+  );
 }
 
 export const PATTERNS: readonly Pattern[] = [
@@ -65,19 +68,14 @@ export const PATTERNS: readonly Pattern[] = [
     senderMatch: /@account\.netflix\.com$|@mailer\.netflix\.com$/i,
     // No capture group on purpose — household extraction returns the full
     // URL, which matchEmail reads via `match[0]`. The terminator class
-    // is negative (exclude whitespace + HTML delimiters) so the regex
-    // admits any RFC 3986 character Netflix might include in a token
-    // (~, +, !, etc.) without truncating. Real-world terminators in
-    // email bodies are whitespace, quotes, or angle brackets.
+    // is negative (exclude whitespace, HTML delimiters, and square
+    // brackets). Square brackets are excluded because Netflix's plain-
+    // text parts wrap URLs as `[https://...]`; without this, the regex
+    // would capture the trailing `]`. Real Netflix tokens are URL-safe
+    // base64 + query string, so nothing legitimate in the URL contains
+    // `[`, `]`, `"`, `'`, `<`, `>`, or whitespace.
     linkRegex:
-      /https:\/\/(?:www\.)?netflix\.com\/account\/(?:travel|update-primary-location)\/[^\s"'<>]+/,
-    validForMinutes: 15,
-  },
-  {
-    service: 'netflix',
-    senderMatch: /@account\.netflix\.com$|@mailer\.netflix\.com$/i,
-    codeRegex: codeOf(4),
-    subjectBlocklist: /household|update.*household|primary.*location/i,
+      /https:\/\/(?:www\.)?netflix\.com\/account\/(?:travel|update-primary-location)\/[^\s"'<>[\]]+/,
     validForMinutes: 15,
   },
   {
@@ -93,12 +91,17 @@ export const PATTERNS: readonly Pattern[] = [
   {
     service: 'max',
     // Real transactional senders: no-reply@alerts.hbomax.com and
-    // hbomax@service.hbomax.com. Post-rebrand mail sometimes comes from
-    // *.max.com subdomains. This regex covers the apex and any
-    // subdomain of hbomax.com or max.com.
-    senderMatch: /@([\w-]+\.)*(hbomax|max)\.com$/i,
+    // hbomax@service.hbomax.com — both hbomax.com subdomains. Accept any
+    // hbomax.com subdomain (it's a single-product transactional domain)
+    // plus only the apex max.com (the post-rebrand sender). We do NOT
+    // wildcard *.max.com because max.com is the primary brand surface
+    // used for marketing / promos / billing too — widening there would
+    // expand the false-positive footprint for no real gain. If a new
+    // max.com subdomain ships an OTP in practice, add it explicitly.
+    senderMatch: /@([\w-]+\.)*hbomax\.com$|@max\.com$/i,
     codeRegex: codeOf(6),
-    validForMinutes: 15,
+    // Max's real email body says "This code expires in 30 minutes".
+    validForMinutes: 30,
   },
 ];
 
@@ -133,21 +136,58 @@ function normalizeFrom(from: string): string {
 }
 
 /**
- * Select the body content to scan. Prefer plain text when non-empty (after
- * trimming), else fall back to HTML. Some MIME senders include a stub text
- * part containing only whitespace alongside the real HTML — treat those as
- * empty so the HTML body is scanned instead.
+ * Convert HTML to a flat, searchable text approximation. Strips every
+ * tag, decodes the small handful of entities we see in real streaming
+ * emails, and collapses whitespace so the code-context regex can see
+ * the textual content contiguously (otherwise inline `<span>` and
+ * `<td>` wrappers around the digits break the context match).
+ *
+ * Not a general-purpose HTML parser — the fixtures are real emails
+ * from Netflix / Disney+ / Max templates and this handles them. If a
+ * new service uses a template that encodes digits as entity refs or
+ * inserts zero-width spaces between digits, this helper will need to
+ * grow.
+ */
+function stripHtml(html: string): string {
+  // Hoist anchor href targets into the flow so linkRegex scanning
+  // can find URLs that only exist inside <a href="..."> attributes
+  // (common in HTML-only Netflix household emails where the anchor
+  // body is "Confirm" rather than the URL itself).
+  const withHrefs = html.replace(/<a\s[^>]*?href=(?:"([^"]*)"|'([^']*)')/gi, ' $1$2 ');
+  return withHrefs
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&zwnj;/gi, '')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Select the body content to scan. Prefer plain text when non-empty
+ * (after trimming). Some templates ship an HTML-only body — Disney+'s
+ * sign-in code email, for one — so we fall back to an HTML-stripped
+ * view of the HTML part. We intentionally do NOT scan raw HTML because
+ * inline markup between the context word and the code (e.g.
+ * `<span>código</span><td>111111</td>`) would push the digits outside
+ * the `[\s\S]{0,500}?` window of the code regex.
  */
 function selectBody(parsed: ParsedEmail): string {
   if (parsed.text && parsed.text.trim().length > 0) return parsed.text;
-  return parsed.html ?? '';
+  const html = parsed.html ?? '';
+  if (html.length === 0) return '';
+  return stripHtml(html);
 }
 
 /**
  * Main dispatcher. Iterates PATTERNS in order and returns the first pattern
  * that both addresses-matches and successfully extracts a code or link. If a
- * pattern matches by sender but fails to extract, iteration continues — the
- * next pattern may cover the same sender (e.g. netflix vs netflix-household).
+ * pattern matches by sender but fails to extract, iteration continues so the
+ * caller can fall through to a later pattern covering the same sender.
  */
 export function matchEmail(parsed: ParsedEmail): MatchResult | null {
   const from = normalizeFrom(parsed.from);

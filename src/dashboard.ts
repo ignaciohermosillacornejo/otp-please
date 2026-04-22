@@ -26,7 +26,6 @@ export interface DashboardData {
 // Fixed service display order. Exported so tests can assert ordering
 // against the same source of truth the renderer uses.
 export const DISPLAY_ORDER: readonly ServiceKey[] = [
-  'netflix',
   'netflix-household',
   'disney',
   'max',
@@ -43,16 +42,10 @@ interface ServiceMeta {
 }
 
 const SERVICE_META: Record<ServiceKey, ServiceMeta> = {
-  netflix: {
+  'netflix-household': {
     name: 'Netflix',
     accentBorder: 'border-red-600',
     accentText: 'text-red-500',
-    emptyMessage: 'no recent code',
-  },
-  'netflix-household': {
-    name: 'Netflix Household',
-    accentBorder: 'border-red-800',
-    accentText: 'text-red-400',
     emptyMessage: 'no household request pending',
   },
   disney: {
@@ -170,12 +163,9 @@ function renderHouseholdCard(
   return [
     `<section class="rounded-lg border-l-4 ${meta.accentBorder} bg-gray-900 p-4 shadow-sm flex flex-col gap-3">`,
     `  <h2 class="text-sm uppercase tracking-wide ${meta.accentText} font-semibold">${escapeHtml(meta.name)}</h2>`,
-    `  <p class="text-xs text-amber-300 bg-amber-900/30 border border-amber-800 rounded-md p-3 leading-relaxed">`,
-    `    This link only works from a device on the home network. If you're traveling, ask someone at home to open this dashboard and tap the link.`,
-    `  </p>`,
     `  <a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer" `,
     `     class="block text-center font-semibold text-white bg-red-700 hover:bg-red-600 rounded-md py-3 px-4 transition-colors">`,
-    `    Open household link`,
+    `    Approve this device on Netflix`,
     `  </a>`,
     `  <div class="flex flex-col gap-1">`,
     `    ${renderCountdownSpan(entry.valid_until, now)}`,

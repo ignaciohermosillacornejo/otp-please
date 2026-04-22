@@ -21,59 +21,86 @@ async function loadFixture(name: string): Promise<ParsedEmail> {
 }
 
 describe('matchEmail — happy paths per service', () => {
-  it('matches a Netflix sign-in code', async () => {
-    const parsed = await loadFixture('netflix-signin.eml');
-    const result = matchEmail(parsed);
-    expect(result).toEqual({
-      service: 'netflix',
-      type: 'code',
-      value: '1234',
-      validForMinutes: 15,
-    });
-  });
-
-  it('matches a Disney+ sign-in code', async () => {
+  it('matches a Disney+ sign-in code from an HTML-only body', async () => {
+    // Fixture is a sanitized real email: HTML-only (text.length = 0),
+    // Spanish subject + body, sender on a trx.mail2.disneyplus.com
+    // subdomain. The sanitized code is 111111.
     const parsed = await loadFixture('disney-signin.eml');
     const result = matchEmail(parsed);
     expect(result).toEqual({
       service: 'disney',
       type: 'code',
-      value: '123456',
+      value: '111111',
       validForMinutes: 15,
     });
   });
 
-  it('matches a Max sign-in code', async () => {
+  it('matches a Max sign-in code from a plain-text body with the alerts.hbomax.com sender', async () => {
+    // Fixture is a sanitized real email: plain-text body, sender
+    // no-reply@alerts.hbomax.com. The sanitized code is 222222, and
+    // Max's real body says the code expires in 30 minutes.
     const parsed = await loadFixture('max-signin.eml');
     const result = matchEmail(parsed);
     expect(result).toEqual({
       service: 'max',
       type: 'code',
-      value: '234567',
-      validForMinutes: 15,
+      value: '222222',
+      validForMinutes: 30,
     });
   });
 
+  it('matches a Max sign-in code from the post-rebrand @max.com apex sender', () => {
+    // Exercises the `@max\.com$` branch of the Max senderMatch, which
+    // was previously covered only by a null-returning negative test.
+    const parsed: ParsedEmail = {
+      from: 'Max <no-reply@max.com>',
+      subject: 'Your Max sign-in code',
+      text: 'Your verification code is 664422. This code expires in 30 minutes.',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toEqual({
+      service: 'max',
+      type: 'code',
+      value: '664422',
+      validForMinutes: 30,
+    });
+  });
 });
 
-describe('matchEmail — Netflix household / travel', () => {
-  it('matches a Netflix household email as household (not as a 4-digit code)', async () => {
-    const parsed = await loadFixture('netflix-household.eml');
-    const result = matchEmail(parsed);
-    expect(result?.service).toBe('netflix-household');
-    expect(result?.type).toBe('household');
-    expect(result?.value).toContain(
-      'https://www.netflix.com/account/update-primary-location/',
-    );
-    expect(result?.validForMinutes).toBe(15);
-  });
-
-  it('matches a Netflix travel email as household (travel link family)', async () => {
+describe('matchEmail — Netflix travel / household link', () => {
+  it('matches a Netflix temporary-access-code email and extracts the travel verify link', async () => {
+    // Fixture is a sanitized real email. The full URL includes a query
+    // string (?nftoken=FAKE_NFTOKEN&messageGuid=FAKE_GUID) which the
+    // linkRegex captures in full, stopping at whitespace or bracket.
     const parsed = await loadFixture('netflix-travel.eml');
     const result = matchEmail(parsed);
     expect(result?.service).toBe('netflix-household');
     expect(result?.type).toBe('household');
-    expect(result?.value).toContain('https://www.netflix.com/account/travel/');
+    expect(result?.value).toMatch(
+      /^https:\/\/www\.netflix\.com\/account\/travel\/verify\?nftoken=/,
+    );
+    // The capture must NOT include a trailing `]` from the bracketed
+    // text-link format in the plain-text part.
+    expect(result?.value.endsWith(']')).toBe(false);
+    expect(result?.validForMinutes).toBe(15);
+  });
+
+  it('also matches the update-primary-location URL variant', () => {
+    // Synthetic: the legacy Netflix household URL shape still needs
+    // to match the same pattern.
+    const parsed: ParsedEmail = {
+      from: 'info@account.netflix.com',
+      subject: 'Update your Netflix Household',
+      text: 'Confirm device: https://www.netflix.com/account/update-primary-location/FAKE_TOKEN_XYZ',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result?.service).toBe('netflix-household');
+    expect(result?.type).toBe('household');
+    expect(result?.value).toBe(
+      'https://www.netflix.com/account/update-primary-location/FAKE_TOKEN_XYZ',
+    );
   });
 });
 
@@ -88,32 +115,32 @@ describe('matchEmail — negative cases', () => {
 describe('matchEmail — direct unit tests (branch coverage)', () => {
   it('handles a bare (un-wrapped) from address', () => {
     const parsed: ParsedEmail = {
-      from: 'info@account.netflix.com',
-      subject: 'Your Netflix sign-in code',
-      text: 'Your code is 4242. It expires in 15 minutes.',
+      from: 'noreply@disneyplus.com',
+      subject: 'Your Disney+ code',
+      text: 'Your code is 424242. It expires in 15 minutes.',
       html: '',
     };
     const result = matchEmail(parsed);
     expect(result).toEqual({
-      service: 'netflix',
+      service: 'disney',
       type: 'code',
-      value: '4242',
+      value: '424242',
       validForMinutes: 15,
     });
   });
 
   it('handles a from address with display name and uppercase characters', () => {
     const parsed: ParsedEmail = {
-      from: 'Netflix <INFO@Account.Netflix.COM>',
-      subject: 'Your Netflix sign-in code',
-      text: 'Code: 9999',
+      from: 'Disney+ <NOREPLY@DisneyPlus.COM>',
+      subject: 'Your Disney+ code',
+      text: 'Code: 999999',
       html: '',
     };
     const result = matchEmail(parsed);
     expect(result).toEqual({
-      service: 'netflix',
+      service: 'disney',
       type: 'code',
-      value: '9999',
+      value: '999999',
       validForMinutes: 15,
     });
   });
@@ -145,38 +172,17 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
     expect(result).toBeNull();
   });
 
-  it('skips the plain-netflix pattern when subject mentions "household" and body has no household link, yielding null', () => {
-    // Sender matches Netflix. Subject has "household" so plain netflix is
-    // skipped by subjectBlocklist. netflix-household ran first but its
-    // linkRegex finds no link in the body. Result: null — a "sender hit
-    // but no extraction" case across BOTH netflix patterns.
+  it('returns null for a Netflix sender when there is no household link in the body', () => {
+    // Netflix now only matches when there is a household/travel link;
+    // plain sign-in emails are out of scope.
     const parsed: ParsedEmail = {
       from: 'info@account.netflix.com',
-      subject: 'Your Netflix Household update',
-      text: 'Nothing useful here and no link.',
+      subject: 'Your Netflix sign-in code',
+      text: 'Your code is 5678. No link here.',
       html: '',
     };
     const result = matchEmail(parsed);
     expect(result).toBeNull();
-  });
-
-  it('continues to the next pattern when an earlier pattern matches sender but fails to extract', () => {
-    // Sender matches netflix-household's senderMatch, but there's no link
-    // in the body. Implementation must NOT give up — it should continue
-    // and let the plain-netflix pattern succeed on the 4-digit code.
-    const parsed: ParsedEmail = {
-      from: 'info@account.netflix.com',
-      subject: 'Your Netflix sign-in code',
-      text: 'Your code is 5678.',
-      html: '',
-    };
-    const result = matchEmail(parsed);
-    expect(result).toEqual({
-      service: 'netflix',
-      type: 'code',
-      value: '5678',
-      validForMinutes: 15,
-    });
   });
 
   it('returns null when the sender matches no pattern', () => {
@@ -217,9 +223,9 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
     // legit sender. An @ in the display name is treated as ambiguous and
     // normalizeFrom returns empty, so senderMatch fails for every pattern.
     const parsed: ParsedEmail = {
-      from: 'evil@attacker.example <info@account.netflix.com>',
-      subject: 'Your Netflix sign-in code',
-      text: 'Your code is 1234.',
+      from: 'evil@attacker.example <noreply@disneyplus.com>',
+      subject: 'Your Disney+ code',
+      text: 'Your code is 123456.',
       html: '',
     };
     const result = matchEmail(parsed);
@@ -228,46 +234,46 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
 
   it('rejects a malformed from with an unclosed angle bracket', () => {
     const parsed: ParsedEmail = {
-      from: 'Netflix <info@account.netflix.com',
-      subject: 'Your Netflix sign-in code',
-      text: 'Your code is 1234.',
+      from: 'Disney+ <noreply@disneyplus.com',
+      subject: 'Your Disney+ code',
+      text: 'Your code is 123456.',
       html: '',
     };
     const result = matchEmail(parsed);
     expect(result).toBeNull();
   });
 
-  it('extracts the Netflix code from context and ignores nearby 4-digit years', () => {
-    // A real Netflix email may include "© 2026 Netflix, Inc." or
-    // "account since 2019". The codeRegex requires a contextual word
-    // (code/passcode/código/...) so the year-shaped digits are skipped.
+  it('extracts the Disney+ code from context and ignores nearby 6-digit years / postal codes', () => {
+    // A real Disney+ email may include "© 2026 Disney" or an "Order
+    // number 100024" artifact. The codeRegex requires a contextual word
+    // (code/passcode/código/...) so those digit-shaped non-codes skip.
     const parsed: ParsedEmail = {
-      from: 'info@account.netflix.com',
-      subject: 'Your Netflix sign-in code',
-      text: 'Account since 2019. Your sign-in code is 7531. © 2026 Netflix, Inc.',
+      from: 'disneyplus@trx.mail2.disneyplus.com',
+      subject: 'Your Disney+ code',
+      text: 'Order 100024 · Your sign-in code is 753199. © 2026 Disney.',
       html: '',
     };
     const result = matchEmail(parsed);
     expect(result).toEqual({
-      service: 'netflix',
+      service: 'disney',
       type: 'code',
-      value: '7531',
+      value: '753199',
       validForMinutes: 15,
     });
   });
 
   it('extracts a Spanish-language code via "código"', () => {
     const parsed: ParsedEmail = {
-      from: 'info@account.netflix.com',
-      subject: 'Tu código de inicio de sesión de Netflix',
-      text: 'Tu código de verificación es 4242. Expira en 15 minutos.',
+      from: 'disneyplus@trx.mail2.disneyplus.com',
+      subject: 'Tu código de inicio de sesión de Disney+',
+      text: 'Tu código de verificación es 424242. Expira en 15 minutos.',
       html: '',
     };
     const result = matchEmail(parsed);
     expect(result).toEqual({
-      service: 'netflix',
+      service: 'disney',
       type: 'code',
-      value: '4242',
+      value: '424242',
       validForMinutes: 15,
     });
   });
@@ -321,7 +327,7 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
       service: 'max',
       type: 'code',
       value: '554433',
-      validForMinutes: 15,
+      validForMinutes: 30,
     });
   });
 });
@@ -385,13 +391,5 @@ describe('PATTERNS invariants', () => {
       const hasLink = Boolean(pattern.linkRegex);
       expect(hasCode !== hasLink).toBe(true);
     }
-  });
-
-  test('netflix-household is ordered before netflix', () => {
-    const householdIdx = PATTERNS.findIndex((p) => p.service === 'netflix-household');
-    const netflixIdx = PATTERNS.findIndex((p) => p.service === 'netflix');
-    expect(householdIdx).toBeGreaterThanOrEqual(0);
-    expect(netflixIdx).toBeGreaterThanOrEqual(0);
-    expect(householdIdx).toBeLessThan(netflixIdx);
   });
 });

@@ -74,7 +74,6 @@ function makeEnv(): { env: Env; kv: FakeKV } {
     DASHBOARD_TITLE: 'Streaming Codes',
     FOOTER_TEXT: '',
     TRUSTED_FORWARDER: 'test@example.com',
-    TAILSCALE_PROBE_URL: '',
   } satisfies Env;
   return { env, kv };
 }
@@ -85,7 +84,6 @@ const FIXED_NOW = new Date('2026-04-20T12:00:00.000Z');
 
 describe('kvKeyFor', () => {
   it('returns a stable prefixed key for each service', () => {
-    expect(kvKeyFor('netflix')).toBe('entry:netflix');
     expect(kvKeyFor('netflix-household')).toBe('entry:netflix-household');
     expect(kvKeyFor('disney')).toBe('entry:disney');
     expect(kvKeyFor('max')).toBe('entry:max');
@@ -109,26 +107,26 @@ describe('storeMatch', () => {
 
   it('writes a code entry with valid_until = received_at + validForMinutes and TTL = minutes*60 + 3600', async () => {
     const match: MatchResult = {
-      service: 'netflix',
+      service: 'disney',
       type: 'code',
-      value: '1234',
+      value: '424242',
       validForMinutes: 15,
     };
-    await storeMatch(env, match, 'Your Netflix sign-in code', FIXED_NOW);
+    await storeMatch(env, match, 'Your Disney+ sign-in code', FIXED_NOW);
 
-    const stored = (await kv.get(kvKeyFor('netflix'), 'json')) as StoredEntry;
+    const stored = (await kv.get(kvKeyFor('disney'), 'json')) as StoredEntry;
     expect(stored).toEqual({
       type: 'code',
-      service: 'netflix',
-      value: '1234',
+      service: 'disney',
+      value: '424242',
       received_at: '2026-04-20T12:00:00.000Z',
       valid_until: '2026-04-20T12:15:00.000Z',
-      subject: 'Your Netflix sign-in code',
+      subject: 'Your Disney+ sign-in code',
     });
 
     // Exactly one put, with the expected TTL.
     expect(kv.puts).toHaveLength(1);
-    expect(kv.puts[0].key).toBe('entry:netflix');
+    expect(kv.puts[0].key).toBe('entry:disney');
     expect(kv.puts[0].expirationTtl).toBe(15 * 60 + ONE_HOUR_SECONDS);
   });
 
@@ -259,10 +257,10 @@ describe('readAllEntries', () => {
   });
 
   it('populates the slots for stored services and leaves the rest as null', async () => {
-    const netflix: MatchResult = {
-      service: 'netflix',
+    const disney: MatchResult = {
+      service: 'disney',
       type: 'code',
-      value: '4242',
+      value: '424242',
       validForMinutes: 15,
     };
     const household: MatchResult = {
@@ -271,14 +269,14 @@ describe('readAllEntries', () => {
       value: 'https://www.netflix.com/account/travel/token',
       validForMinutes: 15,
     };
-    await storeMatch(env, netflix, 'Netflix code', FIXED_NOW);
+    await storeMatch(env, disney, 'Disney+ code', FIXED_NOW);
     await storeMatch(env, household, 'Netflix household', FIXED_NOW);
 
     const result = await readAllEntries(env);
 
-    expect(result.netflix?.type).toBe('code');
-    if (result.netflix?.type !== 'code') throw new Error('unreachable');
-    expect(result.netflix.value).toBe('4242');
+    expect(result.disney?.type).toBe('code');
+    if (result.disney?.type !== 'code') throw new Error('unreachable');
+    expect(result.disney.value).toBe('424242');
 
     expect(result['netflix-household']?.type).toBe('household');
     if (result['netflix-household']?.type !== 'household') throw new Error('unreachable');
@@ -287,9 +285,6 @@ describe('readAllEntries', () => {
     );
 
     // Services never written must still be present and null.
-    const unset: ServiceKey[] = ['disney', 'max'];
-    for (const service of unset) {
-      expect(result[service]).toBeNull();
-    }
+    expect(result.max).toBeNull();
   });
 });

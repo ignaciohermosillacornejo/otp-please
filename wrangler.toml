@@ -22,8 +22,6 @@ TIMEZONE = "America/Santiago"
 DASHBOARD_TITLE = "Streaming Codes"
 # Optional cheeky line shown in dashboard footer. Empty = no footer text.
 FOOTER_TEXT = ""
-# P1: hostname resolvable only from the home tailnet. Empty = P0 mode.
-TAILSCALE_PROBE_URL = ""
 
 # TRUSTED_FORWARDER is set OUT OF BAND as a Worker secret, not here, so
 # the deployer's Gmail address never enters git history:
