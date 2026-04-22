@@ -1,19 +1,42 @@
 # otp-please
 
-My family kept asking me for streaming-service verification codes — every time they tried to log in to Netflix from a new device, or approve a Disney+ sign-in, I had to pull up Gmail and read the six digits aloud over WhatsApp. This Cloudflare Worker reads those emails automatically and puts the code on a little dashboard behind Cloudflare Access so they can grab it themselves.
+"¿Me pasas el código?"
+
+Again. Every streaming service, every new TV, every family trip — someone signs in, a six-digit OTP lands in my Gmail, and I'm apparently the SMTP-to-WhatsApp gateway. The SLA on "your mother reading out six digits" is, it turns out, bad.
+
+This Cloudflare Worker is the replacement. It reads the OTP emails out of Gmail, extracts the code (or, for Netflix, the household approval link), and parks them on a dashboard behind Cloudflare Access so the family can self-serve while I try to finish my padel set.
+
+<p align="center">
+  <img src="docs/images/dashboard.jpg" alt="Family Codes dashboard on a phone: Netflix household approve button (19m 54s valid), Disney+ code 284 193 (expired 5m ago, shown in red), Max code 619 027 (valid for 21m 54s). Warm paper-dark theme, system font, per-service coloured badges." width="320">
+</p>
+
+## The SLA
+
+**Before** — codes relayed through me, manually, over WhatsApp:
+
+- **p50 time-to-code**: ~8 minutes. *"un momento"* → hunt through Gmail → read six digits aloud → spell them again → realise they typed the wrong one → repeat.
+- **Inbound volume**: steady ~12 "¿me pasas el código?" pings a week across mother, partner, brother, houseguests, and whoever's visiting that weekend.
+- **Padel sets interrupted**: non-zero, shameful.
+
+**After** — dashboard bookmarked on every phone:
+
+- **p50 time-to-code**: however long it takes them to tap a bookmark.
+- **Inbound volume**: trending to zero. *Mi mamá* is still adjusting; the app does not ship with a fix for that.
+- **Padel sets interrupted**: zero, as God intended.
+
+*Uptime: whatever Cloudflare gives me. My mother's uptime on asking "¿ya?" three minutes after I don't reply remains 100%.*
 
 ## What it does
 
-When a configured streaming service sends an OTP email to the account owner's Gmail, a Gmail filter forwards a copy to a Cloudflare Email Routing address. An Email Worker parses the message, extracts the code (or, for Netflix Household, the approval link), and writes it to Workers KV. A mobile-first dashboard — gated by Cloudflare Access so only the authorized family members can reach it — shows the current code per service with a live countdown.
+When a configured streaming service sends an OTP email to the account owner's Gmail, a Gmail filter forwards a copy to a Cloudflare Email Routing address. An Email Worker parses the message, extracts the code (or, for Netflix Household, the approval link), and writes it to Workers KV. A mobile-first dashboard — gated by Cloudflare Access so only the authorized family members can reach it — shows the current code per service with a live countdown, hides it once the grace window expires, and forgets the whole thing an hour after it mattered.
 
-Supported in this P0 release:
+Supported today:
 
-- **Netflix** — sign-in OTP (4-digit).
-- **Netflix Household** — "update primary location" / travel approval link. Approval is currently "open the link, only works from the home network" with an on-page warning for travelers; P1 will gate this by tailnet presence so the link is only surfaced when the viewer is actually on the home LAN.
+- **Netflix Household** — "update primary location" / travel approval link. Approval is currently "open the link, only works from the home network" with an on-page warning for travelers; a future version will gate this by tailnet presence so the link is only surfaced when the viewer is actually on the home LAN.
 - **Disney+** — 6-digit verification code.
 - **Max** — 6-digit verification code.
 
-Adding a service is cheap — see the [Adding a new service](#adding-a-new-service) walkthrough.
+Adding a service is cheap — see the [Adding a new service](#adding-a-new-service) walkthrough. Removing a family member who still texts you anyway is out of scope.
 
 ## Architecture
 
@@ -152,7 +175,7 @@ npx wrangler tail
 npx wrangler kv key list --binding=OTP_STORE
 
 # Read a specific entry:
-npx wrangler kv key get --binding=OTP_STORE entry:netflix
+npx wrangler kv key get --binding=OTP_STORE entry:disney
 ```
 
 Common failure modes and what they mean:
@@ -160,7 +183,7 @@ Common failure modes and what they mean:
 - **`skip: forwarder verification failed`** — the inbound message's envelope-from did not match your configured `TRUSTED_FORWARDER` (after Gmail-dot/case normalization). Either the secret isn't set (run `npx wrangler secret put TRUSTED_FORWARDER`), or the filter is forwarding from a different Gmail account than the one you configured. The log line includes the raw and normalized envelope-from vs the configured value and an `matched=false` marker — compare those to what you see in Gmail's filter settings and in the Cloudflare Email Routing Activity tab.
 - **`skip: no pattern matched for "..." from ...`** — the sender address or body didn't match any entry in `PATTERNS`. The log includes the subject and parsed `from`; compare them against `src/parser.ts` and adjust the regex if the service has changed its email template.
 - **`err: KV write failed for <service>: ...`** — a transient KV put failure. The Worker does NOT retry on purpose (see the [Security model](#security-model) below) — the next email from the same service will simply overwrite the key. If you see this repeatedly, check Cloudflare status.
-- **Empty dashboard but `wrangler tail` shows stored entries** — either the codes already expired (their `valid_until` + 1 hour grace elapsed), or the KV namespace id in `wrangler.toml` doesn't match the one the dashboard binding reads from. Run `npx wrangler kv key list --binding=OTP_STORE` to confirm what's actually stored.
+- **Empty dashboard but `wrangler tail` shows stored entries** — either the codes already expired past the 1-hour grace window (`filterStaleEntries` in `src/kv.ts` drops them at read time, even if KV's own TTL hasn't reaped the row yet), or the KV namespace id in `wrangler.toml` doesn't match the one the dashboard binding reads from. Run `npx wrangler kv key list --binding=OTP_STORE` to confirm what's actually stored.
 - **`wrangler dev` always rejects emails** — Worker secrets are not exposed to `wrangler dev`. Copy `.dev.vars.example` to `.dev.vars` and set `TRUSTED_FORWARDER="..."` to a value `wrangler dev` can feed as an env var. `.dev.vars` is gitignored so it won't land in the repo.
 
 ## Security model
