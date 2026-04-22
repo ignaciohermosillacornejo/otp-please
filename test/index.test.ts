@@ -178,14 +178,12 @@ describe('verifyForwarder', () => {
   });
 
   it('returns false when TRUSTED_FORWARDER is undefined (secret unset at runtime)', () => {
-    // The Env type declares TRUSTED_FORWARDER: string, but a Worker
-    // deployed without the secret will have env.TRUSTED_FORWARDER
-    // literally undefined at runtime. normalizeAddress calls
-    // value.trim(), which throws TypeError on undefined; verifyForwarder
-    // must catch this at the boundary and return false instead.
-    expect(
-      verifyForwarder('owner@example.com', undefined as unknown as string),
-    ).toBe(false);
+    // Env.TRUSTED_FORWARDER is typed `string | undefined` because a
+    // Worker deployed without the secret ever being set has
+    // env.TRUSTED_FORWARDER literally undefined at runtime. The
+    // verifyForwarder guard must fail closed here instead of crashing
+    // on `undefined.trim()` inside normalizeAddress.
+    expect(verifyForwarder('owner@example.com', undefined)).toBe(false);
   });
 });
 
@@ -273,7 +271,9 @@ describe('email() handler', () => {
     // dropped if the log line is refactored.
     const skip = logs.find((l) => l.startsWith('skip: no pattern matched'));
     expect(skip).toBeDefined();
-    expect(skip).toContain('from=newsletter@example.org');
+    // All three fields are JSON.stringify'd to prevent whitespace or
+    // newlines in a crafted From/Subject from fragmenting the log line.
+    expect(skip).toContain('from="newsletter@example.org"');
     expect(skip).toContain('subject=');
     expect(skip).toContain('body=');
     // Defense against redaction regressions: the `match.value` redaction

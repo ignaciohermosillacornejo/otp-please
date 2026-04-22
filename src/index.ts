@@ -54,10 +54,10 @@ const CSP_HEADER =
  */
 export function verifyForwarder(
   envelopeFrom: string | null,
-  trustedForwarder: string,
+  trustedForwarder: string | undefined,
 ): boolean {
   if (!envelopeFrom) return false;
-  // The Env type declares TRUSTED_FORWARDER: string, but a Worker
+  // Env.TRUSTED_FORWARDER is `string | undefined` because a Worker
   // deployed without the secret ever being set has env.TRUSTED_FORWARDER
   // literally `undefined` at runtime. Guard before normalizeAddress so
   // an unset secret fails closed (return false) rather than crashing on
@@ -130,11 +130,17 @@ export default {
       // Worker is built to relay and the one thing we always redact.
       const names: string[] = [];
       for (const name of message.headers.keys()) names.push(name);
+      // `?? 'UNSET'` sentinel so the unset-secret case renders as
+      // `configured-forwarder="UNSET"` (quoted, readable) rather than
+      // `configured-forwarder=undefined` (JSON.stringify(undefined)
+      // returns the JS value `undefined`, which template-literal-
+      // interpolates to the bare token). During incident triage, the
+      // quoted sentinel makes the unset-secret state unambiguous.
       console.log(
         `skip: forwarder verification failed` +
           ` envelope-from=${JSON.stringify(message.from)}` +
           ` envelope-to=${JSON.stringify(message.to)}` +
-          ` configured-forwarder=${JSON.stringify(env.TRUSTED_FORWARDER)}` +
+          ` configured-forwarder=${JSON.stringify(env.TRUSTED_FORWARDER ?? 'UNSET')}` +
           ` normalized-from=${JSON.stringify(normalizeAddress(message.from))}` +
           ` normalized-configured=${JSON.stringify(normalizeAddress(env.TRUSTED_FORWARDER))}` +
           ` matched=false` +
@@ -162,9 +168,14 @@ export default {
       // etc.) is immediately diagnosable. Short text bodies fit; HTML
       // bodies get truncated which is fine for triage.
       const body = (normalized.text || normalized.html).slice(0, 400);
+      // All three fields JSON.stringify'd so a crafted From/Subject
+      // containing whitespace or newlines can't fragment the structured
+      // log line, matching the style of the forwarder-verification-
+      // failed log above.
       console.log(
         `skip: no pattern matched` +
-          ` from=${normalized.from} subject=${JSON.stringify(normalized.subject)}` +
+          ` from=${JSON.stringify(normalized.from)}` +
+          ` subject=${JSON.stringify(normalized.subject)}` +
           ` body=${JSON.stringify(body)}`,
       );
       return;
