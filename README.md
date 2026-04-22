@@ -1,7 +1,6 @@
 # otp-please 🍿
 
 [![Tests](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/test.yml)
-[![AI Code Review](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/claude-review.yml/badge.svg?branch=main)](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/claude-review.yml)
 [![Release](https://img.shields.io/github/v/release/ignaciohermosillacornejo/otp-please?label=release&color=blue)](https://github.com/ignaciohermosillacornejo/otp-please/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
