@@ -7,9 +7,17 @@
 // Design notes:
 //  - Single-file output (no external bundle) so the Worker can serve
 //    it directly. The only third-party asset is Tailwind's CDN.
-//  - Meta-refresh every 30s so expired rows eventually vanish even if
-//    the user never interacts. A per-second JS tick keeps the visible
-//    countdowns fresh between full reloads.
+//  - Freshness strategy is two-layered:
+//      1. Client-side poll of /api every POLL_INTERVAL_MS (5s). When a
+//         service's received_at changes (or flips null↔entry) the
+//         matching <section data-service="..."> is replaced in place.
+//         Scroll, mid-flight copy() feedback on the other cards, and
+//         the 1Hz countdown tick are preserved.
+//      2. A widened <meta http-equiv="refresh" content="300"> as a
+//         last-ditch fallback for the case where JS silently died
+//         (e.g. tab backgrounded for days and the runtime throttled it
+//         into oblivion). 300s is long enough not to interrupt normal
+//         use and short enough to self-heal within a single sitting.
 //  - All user-controlled values flow through escapeHtml() before they
 //    hit the template. Attribute values are always double-quoted.
 
@@ -140,7 +148,7 @@ function renderCodeCard(
 ): string {
   const meta = SERVICE_META[service];
   return [
-    `<section class="rounded-lg border-l-4 ${meta.accentBorder} bg-gray-900 p-4 shadow-sm flex flex-col gap-3">`,
+    `<section data-service="${service}" class="rounded-lg border-l-4 ${meta.accentBorder} bg-gray-900 p-4 shadow-sm flex flex-col gap-3">`,
     `  <h2 class="text-sm uppercase tracking-wide ${meta.accentText} font-semibold">${escapeHtml(meta.name)}</h2>`,
     `  <button type="button" data-code="${escapeHtml(entry.value)}" onclick="copy(this)" `,
     `          class="font-mono text-4xl tracking-widest text-gray-100 bg-gray-800 rounded-md py-4 px-3 transition-colors">`,
@@ -161,7 +169,7 @@ function renderHouseholdCard(
 ): string {
   const meta = SERVICE_META[service];
   return [
-    `<section class="rounded-lg border-l-4 ${meta.accentBorder} bg-gray-900 p-4 shadow-sm flex flex-col gap-3">`,
+    `<section data-service="${service}" class="rounded-lg border-l-4 ${meta.accentBorder} bg-gray-900 p-4 shadow-sm flex flex-col gap-3">`,
     `  <h2 class="text-sm uppercase tracking-wide ${meta.accentText} font-semibold">${escapeHtml(meta.name)}</h2>`,
     `  <a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer" `,
     `     class="block text-center font-semibold text-white bg-red-700 hover:bg-red-600 rounded-md py-3 px-4 transition-colors">`,
@@ -178,7 +186,7 @@ function renderHouseholdCard(
 function renderEmptyCard(service: ServiceKey): string {
   const meta = SERVICE_META[service];
   return [
-    `<section class="rounded-lg border-l-4 ${meta.accentBorder} bg-gray-900 p-4 shadow-sm opacity-50 flex flex-col gap-2">`,
+    `<section data-service="${service}" class="rounded-lg border-l-4 ${meta.accentBorder} bg-gray-900 p-4 shadow-sm opacity-50 flex flex-col gap-2">`,
     `  <h2 class="text-sm uppercase tracking-wide ${meta.accentText} font-semibold">${escapeHtml(meta.name)}</h2>`,
     `  <p class="text-gray-400">${escapeHtml(meta.emptyMessage)}</p>`,
     `</section>`,
@@ -195,11 +203,35 @@ function renderCard(
   return renderHouseholdCard(service, entry, now);
 }
 
-// Inline client-side script. Kept small and readable — it does only two
-// things: (1) tap-to-copy feedback and (2) a 1Hz tick that updates the
-// relative time strings. Full-page refresh every 30s (meta http-equiv)
-// handles eventual cleanup of expired cards.
+// Inline client-side script. Responsibilities:
+//  1. copy(): tap-to-copy feedback on code buttons.
+//  2. tick(): 1Hz refresh of relative-time strings on the countdown /
+//     received-ago spans, without touching any other DOM state.
+//  3. poll(): fetch('/api') every POLL_INTERVAL_MS (5s) and diff each
+//     service's received_at against the section's current
+//     data-received-at attribute. On change (including null↔entry
+//     flip) the matching <section data-service="..."> is replaced via
+//     outerHTML. Only cards whose received_at actually changed are
+//     touched — scroll, focus, and any in-flight copy() animation on
+//     other cards are preserved.
+//
+// The SERVICE_META object mirrors the server-side constant of the same
+// name. We duplicate it here (rather than injecting it via data-*)
+// because (a) it's only 3 services × 4 fields and (b) inlining keeps
+// the diff surface obvious if the server-side copy ever changes.
+//
+// escapeHtml / initialCountdownText / initialReceivedText mirror the
+// server helpers in this file so newly-rendered cards look identical
+// to the server-rendered ones. The server is still the source of
+// truth for the initial paint; the client copies exist only for the
+// replacement path.
 const CLIENT_SCRIPT = `
+const POLL_INTERVAL_MS = 5000;
+const SERVICE_META = {
+  'netflix-household': { name: 'Netflix', accentBorder: 'border-red-600', accentText: 'text-red-500', emptyMessage: 'no household request pending' },
+  'disney': { name: 'Disney+', accentBorder: 'border-blue-600', accentText: 'text-blue-400', emptyMessage: 'no recent code' },
+  'max': { name: 'Max', accentBorder: 'border-purple-600', accentText: 'text-purple-400', emptyMessage: 'no recent code' },
+};
 function copy(el) {
   const code = el.dataset.code;
   if (!code) return;
@@ -239,8 +271,90 @@ function tick() {
     el.textContent = m === 0 ? 'received just now' : 'received ' + m + 'm ago';
   });
 }
+function escapeAttr(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function initialCountdownText(validUntil, now) {
+  const delta = Math.round((Date.parse(validUntil) - now) / 1000);
+  if (delta > 0) {
+    const m = Math.floor(delta / 60);
+    const s = delta % 60;
+    return { text: 'valid for ' + m + 'm ' + String(s).padStart(2, '0') + 's', expired: false };
+  }
+  const expiredSec = -delta;
+  const m = Math.floor(expiredSec / 60);
+  return { text: 'expired ' + m + 'm ago', expired: true };
+}
+function initialReceivedText(receivedAt, now) {
+  const ageSec = Math.max(0, Math.round((now - Date.parse(receivedAt)) / 1000));
+  const m = Math.floor(ageSec / 60);
+  return m === 0 ? 'received just now' : 'received ' + m + 'm ago';
+}
+function renderCardHTML(service, entry) {
+  const meta = SERVICE_META[service];
+  if (!meta) return '';
+  if (!entry) {
+    return '<section data-service="' + service + '" class="rounded-lg border-l-4 ' + meta.accentBorder + ' bg-gray-900 p-4 shadow-sm opacity-50 flex flex-col gap-2">' +
+      '<h2 class="text-sm uppercase tracking-wide ' + meta.accentText + ' font-semibold">' + escapeAttr(meta.name) + '</h2>' +
+      '<p class="text-gray-400">' + escapeAttr(meta.emptyMessage) + '</p>' +
+      '</section>';
+  }
+  const now = Date.now();
+  const cd = initialCountdownText(entry.valid_until, now);
+  const expiredCls = cd.expired ? ' text-red-500' : '';
+  const countdown = '<span data-valid-until="' + escapeAttr(entry.valid_until) + '" class="text-sm text-gray-400' + expiredCls + '">' + escapeAttr(cd.text) + '</span>';
+  const received = '<span data-received-at="' + escapeAttr(entry.received_at) + '" class="text-xs text-gray-500">' + escapeAttr(initialReceivedText(entry.received_at, now)) + '</span>';
+  const header = '<h2 class="text-sm uppercase tracking-wide ' + meta.accentText + ' font-semibold">' + escapeAttr(meta.name) + '</h2>';
+  const shell = '<section data-service="' + service + '" class="rounded-lg border-l-4 ' + meta.accentBorder + ' bg-gray-900 p-4 shadow-sm flex flex-col gap-3">';
+  const tail = '<div class="flex flex-col gap-1">' + countdown + received + '</div></section>';
+  if (entry.type === 'code') {
+    const button = '<button type="button" data-code="' + escapeAttr(entry.value) + '" onclick="copy(this)" class="font-mono text-4xl tracking-widest text-gray-100 bg-gray-800 rounded-md py-4 px-3 transition-colors">' + escapeAttr(entry.value) + '</button>';
+    return shell + header + button + tail;
+  }
+  const link = '<a href="' + escapeAttr(entry.url) + '" target="_blank" rel="noopener noreferrer" class="block text-center font-semibold text-white bg-red-700 hover:bg-red-600 rounded-md py-3 px-4 transition-colors">Approve this device on Netflix</a>';
+  return shell + header + link + tail;
+}
+function currentReceivedAt(section) {
+  const el = section.querySelector('[data-received-at]');
+  return el ? el.getAttribute('data-received-at') : null;
+}
+function poll() {
+  fetch('/api', { cache: 'no-store' }).then((res) => {
+    // 302 to Access login (session expired) lands here too — Access
+    // serves HTML so JSON.parse would throw; treat any non-200 as
+    // "skip this tick, stale DOM is fine".
+    if (!res.ok) return null;
+    return res.json();
+  }).then((data) => {
+    if (!data) return;
+    let changed = false;
+    Object.keys(SERVICE_META).forEach((service) => {
+      const section = document.querySelector('[data-service="' + service + '"]');
+      if (!section) return;
+      const entry = data[service] || null;
+      const newReceivedAt = entry ? entry.received_at : null;
+      if (currentReceivedAt(section) !== newReceivedAt) {
+        section.outerHTML = renderCardHTML(service, entry);
+        changed = true;
+      }
+    });
+    // Only call tick() when something moved — a no-op tick would just
+    // rewrite spans to their current text, wasted work but not wrong.
+    if (changed) tick();
+  }).catch((e) => {
+    // Network blip, JSON parse error, etc. Keep polling on the next
+    // interval. Stale DOM + ticking countdown is an acceptable state.
+    console.warn('poll failed', e);
+  });
+}
 tick();
 setInterval(tick, 1000);
+setInterval(poll, POLL_INTERVAL_MS);
 `.trim();
 
 /**
@@ -265,7 +379,7 @@ export function renderDashboard(data: DashboardData): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="refresh" content="30">
+  <meta http-equiv="refresh" content="300">
   <title>${escapeHtml(data.title)}</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>

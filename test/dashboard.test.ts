@@ -97,9 +97,20 @@ describe('renderDashboard — structure and ordering', () => {
     expect(html).toContain('<h1 class="text-2xl font-bold">My Codes</h1>');
   });
 
-  it('includes a meta refresh tag with 30-second interval', () => {
+  it('includes a widened 300-second meta refresh as a JS-dead fallback', () => {
     const html = renderDashboard(defaultData());
-    expect(html).toContain('<meta http-equiv="refresh" content="30">');
+    expect(html).toContain('<meta http-equiv="refresh" content="300">');
+    // The old 30s cadence is replaced by client-side polling; guard against
+    // accidental reintroduction which would cause a full-page reload that
+    // kicks the user out of mid-flight copy animations and trashes scroll.
+    expect(html).not.toContain('content="30"');
+  });
+
+  it('stamps data-service on each card so the poller can locate them', () => {
+    const html = renderDashboard(defaultData());
+    expect(html).toContain('data-service="netflix-household"');
+    expect(html).toContain('data-service="disney"');
+    expect(html).toContain('data-service="max"');
   });
 
   it('emits <html lang="en" class="dark"> so dark mode is the default', () => {
@@ -179,9 +190,18 @@ describe('renderDashboard — code entries', () => {
 
   it('does not render a copy button for an empty entry', () => {
     const html = renderDashboard(defaultData());
-    // No entries populated, so no data-code attributes should exist.
-    expect(html).not.toContain('data-code=');
-    expect(html).not.toContain('onclick="copy(this)"');
+    // Scope to the visible <main> region. The inline <script> also
+    // contains the literal strings "data-code=" and 'onclick="copy(this)"'
+    // inside the client-side card-builder template — that's correct code,
+    // not a rendered button. The test's intent is "no copy button in any
+    // server-rendered card when all entries are null".
+    const mainStart = html.indexOf('<main');
+    const mainEnd = html.indexOf('</main>');
+    expect(mainStart).toBeGreaterThan(-1);
+    expect(mainEnd).toBeGreaterThan(mainStart);
+    const body = html.slice(mainStart, mainEnd);
+    expect(body).not.toContain('data-code=');
+    expect(body).not.toContain('onclick="copy(this)"');
   });
 });
 
@@ -219,10 +239,17 @@ describe('renderDashboard — household entries', () => {
 describe('renderDashboard — empty states', () => {
   it('renders "no recent code" for disney and max (household has its own empty copy)', () => {
     const html = renderDashboard(defaultData());
+    // Scope to <main>: the client-side SERVICE_META mirror in the
+    // inline <script> also contains these emptyMessage strings, which
+    // are correct code (used when polling replaces an entry-populated
+    // card with an empty one), not rendered cards.
+    const mainStart = html.indexOf('<main');
+    const mainEnd = html.indexOf('</main>');
+    const body = html.slice(mainStart, mainEnd);
     // "no recent code" appears for disney and max. Netflix (household)
     // uses "no household request pending" instead.
-    expect(html.match(/no recent code/g)?.length).toBe(2);
-    expect(html).toContain('no household request pending');
+    expect(body.match(/no recent code/g)?.length).toBe(2);
+    expect(body).toContain('no household request pending');
   });
 
   it('renders "no household request pending" for netflix-household with null entry', () => {
@@ -331,5 +358,30 @@ describe('renderDashboard — inline client script', () => {
   it('references the Tailwind CDN script', () => {
     const html = renderDashboard(defaultData());
     expect(html).toContain('https://cdn.tailwindcss.com');
+  });
+});
+
+describe('renderDashboard — client-side polling', () => {
+  it('defines POLL_INTERVAL_MS = 5000', () => {
+    const html = renderDashboard(defaultData());
+    expect(html).toMatch(/const\s+POLL_INTERVAL_MS\s*=\s*5000/);
+  });
+
+  it('defines a poll() function that fetches /api', () => {
+    const html = renderDashboard(defaultData());
+    expect(html).toMatch(/function\s+poll\s*\(/);
+    expect(html).toContain("fetch('/api'");
+  });
+
+  it('schedules poll at POLL_INTERVAL_MS so the cadence is one consistent value', () => {
+    const html = renderDashboard(defaultData());
+    expect(html).toContain('setInterval(poll, POLL_INTERVAL_MS)');
+  });
+
+  it('keeps the 1-second tick interval so countdown text stays live between polls', () => {
+    // Explicit regression guard: the poll must be additive to the existing
+    // per-second tick, not a replacement for it.
+    const html = renderDashboard(defaultData());
+    expect(html).toContain('setInterval(tick, 1000);');
   });
 });
