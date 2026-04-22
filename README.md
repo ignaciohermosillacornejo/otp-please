@@ -1,5 +1,12 @@
 # otp-please 🍿
 
+[![Tests](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/test.yml)
+[![AI Code Review](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/claude-review.yml/badge.svg?branch=main)](https://github.com/ignaciohermosillacornejo/otp-please/actions/workflows/claude-review.yml)
+[![Release](https://img.shields.io/github/v/release/ignaciohermosillacornejo/otp-please?label=release&color=blue)](https://github.com/ignaciohermosillacornejo/otp-please/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
 "¿Me pasas el código?"
 
 If you are the "account owner" for your family, you are also the unofficial, unpaid SMTP-to-WhatsApp gateway. Every time a guest signs in or a session expires, you’re interrupted mid-meeting (or mid-padel set) to hunt through Gmail and read out six digits.
