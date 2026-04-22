@@ -532,9 +532,8 @@ export function renderDashboard(data: DashboardData): string {
 </head>
 <body class="min-h-screen bg-[oklch(0.18_0.008_55)] text-stone-100 antialiased" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
   <main class="max-w-md mx-auto px-4 pt-8 pb-10 flex flex-col gap-2.5">
-    <header class="flex items-baseline justify-between pb-2 px-1">
+    <header class="pb-2 px-1">
       <h1 class="text-[22px] font-semibold tracking-tight text-stone-100">${escapeHtml(data.title)}</h1>
-      <span class="text-[11px] uppercase tracking-[0.16em] text-stone-500">live</span>
     </header>
     <div class="text-[11px] uppercase tracking-[0.14em] text-stone-500 px-1 pb-0.5">codes</div>
 ${cards}

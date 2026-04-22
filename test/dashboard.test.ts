@@ -173,10 +173,20 @@ describe('renderDashboard — structure and ordering', () => {
     expect(html).toContain('<meta name="theme-color" content="#1a1714">');
   });
 
-  it('renders the LIVE eyebrow and CODES section label', () => {
+  it('renders the CODES section label above the cards', () => {
     const html = renderDashboard(defaultData());
-    expect(html).toMatch(/>live</);
     expect(html).toMatch(/>codes</);
+  });
+
+  it('does not render a decorative LIVE eyebrow in the header', () => {
+    // Regression guard: the LIVE eyebrow was dropped because it was
+    // decorative (no underlying liveness check). If someone reintroduces
+    // it, they should make it honest (driven by the poll's success
+    // state) rather than a static label.
+    const html = renderDashboard(defaultData());
+    const headerMatch = html.match(/<header[\s\S]*?<\/header>/);
+    expect(headerMatch).not.toBeNull();
+    expect(headerMatch![0]).not.toMatch(/>live</i);
   });
 
   it('includes a widened 300-second meta refresh as a JS-dead fallback', () => {
