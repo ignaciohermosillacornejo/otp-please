@@ -2,7 +2,7 @@ import PostalMime from 'postal-mime';
 
 import type { Env } from './config';
 import { renderDashboard } from './dashboard';
-import { readAllEntries, storeMatch } from './kv';
+import { filterStaleEntries, readAllEntries, storeMatch } from './kv';
 import { matchEmail, type ParsedEmail } from './parser';
 
 // Conservative Content-Security-Policy for the HTML response.
@@ -203,13 +203,19 @@ export default {
       });
     }
 
+    // Both /api and / apply the same grace-window filter so the JSON
+    // and the HTML always agree on which entries exist. Any entry whose
+    // valid_until is more than an hour in the past is nulled out — the
+    // dashboard should not surface "expired 600m ago" from a KV row
+    // that outlived its TTL briefly.
+    const now = new Date();
+
     // /api — machine-readable JSON snapshot of every service entry.
     // Same Record<ServiceKey, StoredEntry|null> shape the HTML
-    // renderer consumes. Intentionally identical to readAllEntries'
-    // return value; downstream scripts can mirror the dashboard's
+    // renderer consumes. Downstream scripts can mirror the dashboard's
     // state without parsing HTML.
     if (url.pathname === '/api') {
-      const entries = await readAllEntries(env);
+      const entries = filterStaleEntries(await readAllEntries(env), now);
       return Response.json(entries, {
         headers: { 'cache-control': 'no-store' },
       });
@@ -218,12 +224,12 @@ export default {
     // Everything else → dashboard. Unknown paths intentionally fall
     // through rather than 404ing, so bookmarks to old URLs and
     // casual typos still land on something useful.
-    const entries = await readAllEntries(env);
+    const entries = filterStaleEntries(await readAllEntries(env), now);
     const html = renderDashboard({
       entries,
       title: env.DASHBOARD_TITLE,
       footerText: env.FOOTER_TEXT,
-      now: new Date(),
+      now,
     });
 
     return new Response(html, {

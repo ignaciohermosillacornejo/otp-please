@@ -4,6 +4,8 @@ import type { Env } from '../src/config';
 import {
   KV_KEY_PREFIX,
   ONE_HOUR_SECONDS,
+  filterStaleEntries,
+  isEntryFresh,
   kvKeyFor,
   readAllEntries,
   readEntry,
@@ -235,6 +237,85 @@ describe('readEntry', () => {
     // Advance past TTL = 15*60 + 3600 = 4500 seconds.
     kv.advanceSecondsBy(15 * 60 + ONE_HOUR_SECONDS);
     expect(await readEntry(env, 'max')).toBeNull();
+  });
+});
+
+describe('isEntryFresh', () => {
+  const entryValidUntil = (isoValidUntil: string): StoredEntry => ({
+    type: 'code',
+    service: 'disney',
+    value: '123456',
+    received_at: '2026-04-20T11:45:00.000Z',
+    valid_until: isoValidUntil,
+    subject: 'irrelevant',
+  });
+
+  it('is false for null', () => {
+    expect(isEntryFresh(null, FIXED_NOW)).toBe(false);
+  });
+
+  it('is true for an entry still inside its validity window', () => {
+    const validUntil = new Date(FIXED_NOW.getTime() + 5 * 60 * 1000).toISOString();
+    expect(isEntryFresh(entryValidUntil(validUntil), FIXED_NOW)).toBe(true);
+  });
+
+  it('is true for an entry expired less than one hour ago (inside grace)', () => {
+    const validUntil = new Date(FIXED_NOW.getTime() - 59 * 60 * 1000).toISOString();
+    expect(isEntryFresh(entryValidUntil(validUntil), FIXED_NOW)).toBe(true);
+  });
+
+  it('is true exactly at the grace boundary (60m past valid_until)', () => {
+    // Boundary check: ONE_HOUR_SECONDS = 3600; elapsed = 3600 ⇒ still fresh.
+    const validUntil = new Date(FIXED_NOW.getTime() - ONE_HOUR_SECONDS * 1000).toISOString();
+    expect(isEntryFresh(entryValidUntil(validUntil), FIXED_NOW)).toBe(true);
+  });
+
+  it('is false once the entry has been expired for more than one hour', () => {
+    const validUntil = new Date(
+      FIXED_NOW.getTime() - (ONE_HOUR_SECONDS + 1) * 1000,
+    ).toISOString();
+    expect(isEntryFresh(entryValidUntil(validUntil), FIXED_NOW)).toBe(false);
+  });
+});
+
+describe('filterStaleEntries', () => {
+  const code = (validUntil: string): StoredEntry => ({
+    type: 'code',
+    service: 'disney',
+    value: '123456',
+    received_at: '2026-04-20T11:45:00.000Z',
+    valid_until: validUntil,
+    subject: 'irrelevant',
+  });
+
+  it('nulls out entries whose valid_until is more than an hour past', () => {
+    const fresh = code(new Date(FIXED_NOW.getTime() + 60_000).toISOString());
+    const stale = code(
+      new Date(FIXED_NOW.getTime() - (ONE_HOUR_SECONDS + 60) * 1000).toISOString(),
+    );
+    const result = filterStaleEntries(
+      {
+        'netflix-household': null,
+        disney: fresh,
+        max: stale,
+      },
+      FIXED_NOW,
+    );
+    expect(result.disney).toBe(fresh);
+    expect(result.max).toBeNull();
+    expect(result['netflix-household']).toBeNull();
+  });
+
+  it('returns a record with every ServiceKey present (shape parity with readAllEntries)', () => {
+    const result = filterStaleEntries(
+      { 'netflix-household': null, disney: null, max: null },
+      FIXED_NOW,
+    );
+    for (const service of SERVICE_KEYS) {
+      expect(result).toHaveProperty(service);
+      expect(result[service]).toBeNull();
+    }
+    expect(Object.keys(result).sort()).toEqual([...SERVICE_KEYS].sort());
   });
 });
 
