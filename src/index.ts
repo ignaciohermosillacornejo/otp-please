@@ -19,10 +19,10 @@ import { matchEmail, type ParsedEmail } from './parser';
 // fetches to third parties.
 const CSP_HEADER =
   "default-src 'self'; " +
-  "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; " +
+  "script-src 'self' https://cdn.tailwindcss.com https://static.cloudflareinsights.com 'unsafe-inline'; " +
   "style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; " +
   "img-src 'self' data:; " +
-  "connect-src 'self';";
+  "connect-src 'self' https://cloudflareinsights.com;";
 
 /**
  * Returns true iff the envelope-from address matches the configured
