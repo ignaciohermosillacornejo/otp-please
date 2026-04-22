@@ -123,41 +123,33 @@ export default {
   ): Promise<void> {
     const authResults = message.headers.get('Authentication-Results');
     if (!verifyForwarder(authResults, env.TRUSTED_FORWARDER)) {
-      // ONE-SHOT DIAGNOSTIC (diag/header-keys-dump): when verification
-      // fails, dump every header NAME CF handed us so we can see
-      // whether Authentication-Results is actually present under a
-      // different key (e.g. ARC-Authentication-Results). No values
-      // are logged here — names only — to keep the diagnostic
-      // PII-safe. This branch exists to resolve the "spf=absent"
-      // mystery; remove once the root header name is known.
-      try {
-        const names: string[] = [];
-        for (const name of message.headers.keys()) names.push(name);
-        const hasAuth = message.headers.get('Authentication-Results');
-        const hasArc = message.headers.get('ARC-Authentication-Results');
-        console.log(
-          `diag: header-names=[${names.join(',')}] Authentication-Results.length=${hasAuth?.length ?? 0} ARC-Authentication-Results.length=${hasArc?.length ?? 0}`,
-        );
-      } catch (e) {
-        console.log(`diag: header-dump failed ${e instanceof Error ? e.message : String(e)}`);
-      }
-      // Log a redacted breakdown of what the envelope produced vs what
-      // we were configured to trust. No full addresses / local-parts —
-      // only SPF result, mailfrom domain, and configured domain. This
-      // is enough to diagnose the two common failure modes (Gmail
-      // stamping a different domain like googlemail.com / SRS rewrite,
-      // or an empty TRUSTED_FORWARDER secret) without leaking either
-      // party's identity into Worker logs.
+      // Verbose by design. This is a low-traffic personal Worker on the
+      // owner's CF account, logs are private, and we've been burned by
+      // under-logged skip paths. Dump everything that could explain why
+      // verification failed: every inbound header name, the first 500
+      // chars of both Authentication-Results and ARC-Authentication-
+      // Results (CF Email Routing has been observed forwarding the ARC
+      // variant but not a fresh Authentication-Results), envelope
+      // addresses, and the parsed SPF/mailfrom/configured triple.
+      //
+      // Do NOT log extracted OTP values or household URL tokens from
+      // here or anywhere else — those are the user-facing secrets the
+      // Worker is built to relay and the one thing we always redact.
+      const names: string[] = [];
+      for (const name of message.headers.keys()) names.push(name);
+      const arcResults = message.headers.get('ARC-Authentication-Results');
       const stripped = (authResults ?? '').replace(/\([^)]*\)/g, '');
       const spfResult = stripped.match(/\bspf=(\w+)/i)?.[1] ?? 'absent';
       const mailfromMatch = stripped.match(/\bsmtp\.mailfrom=([^\s;()]+)/i);
-      const gotDomain = mailfromMatch
-        ? (normalizeAddress(mailfromMatch[1]).split('@')[1] ?? 'malformed')
-        : 'absent';
-      const configuredDomain =
-        normalizeAddress(env.TRUSTED_FORWARDER).split('@')[1] ?? 'malformed';
+      const mailfromValue = mailfromMatch ? normalizeAddress(mailfromMatch[1]) : 'absent';
       console.log(
-        `skip: forwarder verification failed (envelope rejected) spf=${spfResult} mailfrom-domain=${gotDomain} configured-domain=${configuredDomain}`,
+        `skip: forwarder verification failed` +
+          ` envelope-from=${message.from} envelope-to=${message.to}` +
+          ` configured-forwarder=${env.TRUSTED_FORWARDER}` +
+          ` spf=${spfResult} mailfrom=${mailfromValue}` +
+          ` header-names=[${names.join(',')}]` +
+          ` Authentication-Results=${JSON.stringify((authResults ?? '').slice(0, 500))}` +
+          ` ARC-Authentication-Results=${JSON.stringify((arcResults ?? '').slice(0, 500))}`,
       );
       return;
     }
@@ -176,18 +168,15 @@ export default {
 
     const match = matchEmail(normalized);
     if (!match) {
-      // Log only the sender DOMAIN, not the full address. With
-      // manual-forward support, the outer `from` on a no-match can
-      // be a family member's personal Gmail (`foo@gmail.com`) —
-      // logging that verbatim would leak PII into Worker logs and
-      // now that observability is enabled, those logs persist. The
-      // domain alone is enough to debug template/regex drift
-      // ("unknown sender from gmail.com" = manual forward, from
-      // account.netflix.com = something changed upstream).
-      const atIdx = normalized.from.lastIndexOf('@');
-      const domain = atIdx === -1 ? 'unknown' : normalized.from.slice(atIdx + 1);
+      // Full sender + subject + first 400 chars of body so template
+      // drift (service adds a new subdomain, changes the code prefix,
+      // etc.) is immediately diagnosable. Short text bodies fit; HTML
+      // bodies get truncated which is fine for triage.
+      const body = (normalized.text || normalized.html).slice(0, 400);
       console.log(
-        `skip: no pattern matched for "${normalized.subject}" from @${domain}`,
+        `skip: no pattern matched` +
+          ` from=${normalized.from} subject=${JSON.stringify(normalized.subject)}` +
+          ` body=${JSON.stringify(body)}`,
       );
       return;
     }
