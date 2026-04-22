@@ -40,8 +40,8 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
 │  Cloudflare Worker `otp-please`                      │
 │                                                      │
 │  email() handler:                                    │
-│   - Verifies Authentication-Results (spf=pass +      │
-│     smtp.mailfrom matches TRUSTED_FORWARDER)         │
+│   - Verifies envelope-from matches TRUSTED_FORWARDER │
+│     (CF's MX has already attested SPF at ingest)     │
 │   - Parses MIME via postal-mime                      │
 │   - Per-service pattern matching                     │
 │   - Writes StoredEntry to KV with 1h grace TTL       │
@@ -157,7 +157,7 @@ npx wrangler kv key get --binding=OTP_STORE entry:netflix
 
 Common failure modes and what they mean:
 
-- **`skip: forwarder verification failed (envelope rejected)`** — the inbound message's `Authentication-Results` header did not contain an `spf=pass` with an `smtp.mailfrom` matching your configured `TRUSTED_FORWARDER`. Either the secret isn't set (run `npx wrangler secret put TRUSTED_FORWARDER`), or the filter is forwarding from a different Gmail account than the one you configured. Confirm in Gmail's filter settings.
+- **`skip: forwarder verification failed`** — the inbound message's envelope-from did not match your configured `TRUSTED_FORWARDER` (after Gmail-dot/case normalization). Either the secret isn't set (run `npx wrangler secret put TRUSTED_FORWARDER`), or the filter is forwarding from a different Gmail account than the one you configured. The log line includes the raw and normalized envelope-from vs the configured value and an `matched=false` marker — compare those to what you see in Gmail's filter settings and in the Cloudflare Email Routing Activity tab.
 - **`skip: no pattern matched for "..." from ...`** — the sender address or body didn't match any entry in `PATTERNS`. The log includes the subject and parsed `from`; compare them against `src/parser.ts` and adjust the regex if the service has changed its email template.
 - **`err: KV write failed for <service>: ...`** — a transient KV put failure. The Worker does NOT retry on purpose (see the [Security model](#security-model) below) — the next email from the same service will simply overwrite the key. If you see this repeatedly, check Cloudflare status.
 - **Empty dashboard but `wrangler tail` shows stored entries** — either the codes already expired (their `valid_until` + 1 hour grace elapsed), or the KV namespace id in `wrangler.toml` doesn't match the one the dashboard binding reads from. Run `npx wrangler kv key list --binding=OTP_STORE` to confirm what's actually stored.
@@ -167,8 +167,8 @@ Common failure modes and what they mean:
 
 ### What this Worker trusts
 
-- **That mail arriving at `codes@<yourdomain>` was forwarded through your Gmail account.** This is verified by checking for `spf=pass` plus `smtp.mailfrom=<TRUSTED_FORWARDER>` in the inbound `Authentication-Results` header. Anyone who can forge Google's SPF can bypass this check; anyone who has compromised your Gmail account has bigger problems than a streaming code.
-- **That Cloudflare Email Routing strips any `Authentication-Results` header the sender tried to set themselves** and replaces it with its own, MTA-produced stanza. RFC 8601 §5.3 says a receiver SHOULD do this, and Cloudflare does in practice — without that, the check is trivially spoofable. See the comment block on `verifyForwarder` in `src/index.ts`.
+- **That mail arriving at `codes@<yourdomain>` was forwarded through your Gmail account.** Cloudflare Email Routing's MTA performs SPF/DKIM/DMARC/ARC at ingest (visible in the Email Routing Activity tab as `spf=pass dkim=pass arc=pass Spam=Safe`) and drops anything that fails SPF before this Worker is invoked. So by the time `message.from` reaches the Worker, Cloudflare has already verified the envelope-from is authentic. The Worker compares it to `TRUSTED_FORWARDER` (case-insensitive, Gmail-dot-normalized) and rejects anything else. Anyone who can forge Google's SPF can bypass this; anyone who has compromised your Gmail account has bigger problems than a streaming code.
+- **That Cloudflare Email Routing does NOT forward a fresh `Authentication-Results` header into the Worker.** An earlier version of `verifyForwarder` parsed that header and was silently rejecting every legitimate forward — see the JSDoc on `verifyForwarder` in `src/index.ts` for the full story. The current check relies solely on CF's pre-delivery SPF, which is the correct load-bearing signal.
 - **That Cloudflare Access reliably gates the `fetch()` handler**, except the `/healthz` bypass, and that your family members sign in with the configured OAuth identities.
 
 ### What this Worker does NOT do

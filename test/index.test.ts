@@ -141,12 +141,12 @@ describe('verifyForwarder', () => {
   });
 
   it('treats Gmail addresses with different dot placements as the same mailbox', () => {
-    // Google ignores dots in the gmail.com local-part. The owner's
-    // Gmail alternates between `hermosillaignacio@` and
-    // `hermosilla.ignacio@` canonical forms; outbound envelope stamps
-    // whichever the account uses, which may differ from the form the
-    // deployer put in TRUSTED_FORWARDER. Both sides get dot-stripped
-    // before compare.
+    // Google ignores dots in the gmail.com local-part — e.g.
+    // `foo.bar@gmail.com` and `foobar@gmail.com` address the same
+    // mailbox, and outbound envelope stamps whichever canonical form
+    // the account uses, which may differ from the form the deployer
+    // put in TRUSTED_FORWARDER. Both sides get dot-stripped before
+    // compare so the check survives that drift.
     expect(verifyForwarder('fo.o.bar@gmail.com', 'foobar@gmail.com')).toBe(true);
     // Reverse — TRUSTED_FORWARDER with dots, envelope without.
     expect(verifyForwarder('foobar@gmail.com', 'fo.o.bar@gmail.com')).toBe(true);
