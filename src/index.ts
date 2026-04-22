@@ -123,6 +123,24 @@ export default {
   ): Promise<void> {
     const authResults = message.headers.get('Authentication-Results');
     if (!verifyForwarder(authResults, env.TRUSTED_FORWARDER)) {
+      // ONE-SHOT DIAGNOSTIC (diag/header-keys-dump): when verification
+      // fails, dump every header NAME CF handed us so we can see
+      // whether Authentication-Results is actually present under a
+      // different key (e.g. ARC-Authentication-Results). No values
+      // are logged here — names only — to keep the diagnostic
+      // PII-safe. This branch exists to resolve the "spf=absent"
+      // mystery; remove once the root header name is known.
+      try {
+        const names: string[] = [];
+        for (const name of message.headers.keys()) names.push(name);
+        const hasAuth = message.headers.get('Authentication-Results');
+        const hasArc = message.headers.get('ARC-Authentication-Results');
+        console.log(
+          `diag: header-names=[${names.join(',')}] Authentication-Results.length=${hasAuth?.length ?? 0} ARC-Authentication-Results.length=${hasArc?.length ?? 0}`,
+        );
+      } catch (e) {
+        console.log(`diag: header-dump failed ${e instanceof Error ? e.message : String(e)}`);
+      }
       // Log a redacted breakdown of what the envelope produced vs what
       // we were configured to trust. No full addresses / local-parts —
       // only SPF result, mailfrom domain, and configured domain. This
