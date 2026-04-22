@@ -15,14 +15,14 @@ import { matchEmail, type ParsedEmail } from './parser';
 // the dashboard being single-tenant and Access-gated.
 //
 // `img-src 'self' data:` allows inline data URLs if a future card ever
-// wants a small embedded icon; `connect-src 'self'` blocks outbound
-// fetches to third parties.
+// wants a small embedded icon. `connect-src` permits the Cloudflare
+// Insights telemetry beacon; all other outbound fetches are blocked.
 const CSP_HEADER =
   "default-src 'self'; " +
-  "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; " +
+  "script-src 'self' https://cdn.tailwindcss.com https://static.cloudflareinsights.com 'unsafe-inline'; " +
   "style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; " +
   "img-src 'self' data:; " +
-  "connect-src 'self';";
+  "connect-src 'self' https://cloudflareinsights.com;";
 
 /**
  * Returns true iff the envelope-from address matches the configured
