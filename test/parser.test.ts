@@ -332,6 +332,106 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
   });
 });
 
+describe('matchEmail — manually forwarded emails (Gmail Forward button)', () => {
+  it('extracts the inner Netflix From from a Gmail-style "Forwarded message" block and matches the travel link', () => {
+    // Shape of a Gmail manual forward: outer From is the family
+    // member's Gmail; the real streaming-service From only exists
+    // inside the quoted block in the body.
+    const parsed: ParsedEmail = {
+      from: 'Family Member <family@gmail.com>',
+      subject: 'Fwd: Your Netflix temporary access code',
+      text: [
+        '',
+        '---------- Forwarded message ---------',
+        'From: Netflix <info@account.netflix.com>',
+        'Date: Fri, 27 Mar 2026 at 16:03',
+        'Subject: Your Netflix temporary access code',
+        'To: <codes@example.com>',
+        '',
+        'Get Code',
+        '[https://www.netflix.com/account/travel/verify?nftoken=FAKE_TOKEN]',
+      ].join('\n'),
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result?.service).toBe('netflix-household');
+    expect(result?.type).toBe('household');
+    expect(result?.value).toBe(
+      'https://www.netflix.com/account/travel/verify?nftoken=FAKE_TOKEN',
+    );
+  });
+
+  it('extracts the inner Disney+ From from a Spanish-localized "Mensaje reenviado" block and matches the code', () => {
+    // Gmail localizes the forward marker per account UI language.
+    const parsed: ParsedEmail = {
+      from: 'Family Member <family@gmail.com>',
+      subject: 'Fwd: Tu código de acceso único para Disney+',
+      text: [
+        '',
+        '---------- Mensaje reenviado ---------',
+        'De: Disney+ <disneyplus@trx.mail2.disneyplus.com>',
+        'From: Disney+ <disneyplus@trx.mail2.disneyplus.com>',
+        'Asunto: Tu código de acceso único para Disney+',
+        '',
+        'Tu código de verificación es 887766. Expira en 15 minutos.',
+      ].join('\n'),
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toEqual({
+      service: 'disney',
+      type: 'code',
+      value: '887766',
+      validForMinutes: 15,
+    });
+  });
+
+  it('returns null when the forwarded block exists but the inner From is not a recognized service', () => {
+    const parsed: ParsedEmail = {
+      from: 'Family Member <family@gmail.com>',
+      subject: 'Fwd: newsletter',
+      text: [
+        '---------- Forwarded message ---------',
+        'From: News <news@example.org>',
+        '',
+        'Today in tech: 123456 amazing things happened.',
+      ].join('\n'),
+      html: '',
+    };
+    expect(matchEmail(parsed)).toBeNull();
+  });
+
+  it('returns null when no forwarded-message marker is present and the outer sender is unrecognized', () => {
+    const parsed: ParsedEmail = {
+      from: 'Family Member <family@gmail.com>',
+      subject: 'Your Netflix sign-in code',
+      text: 'This body would have matched if the outer From were info@account.netflix.com, but it is not.',
+      html: '',
+    };
+    expect(matchEmail(parsed)).toBeNull();
+  });
+
+  it('prefers the outer From when it matches a pattern (no false-positive detour through the body)', () => {
+    // If the real sender is Netflix and the body also contains a
+    // forwarded block (unlikely but possible), the outer sender wins.
+    const parsed: ParsedEmail = {
+      from: 'Netflix <info@account.netflix.com>',
+      subject: 'Your Netflix temporary access code',
+      text: [
+        'Get Code',
+        '[https://www.netflix.com/account/travel/verify?nftoken=OUTER_TOKEN]',
+        '',
+        '---------- Forwarded message ---------',
+        'From: Something Else <other@example.org>',
+      ].join('\n'),
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result?.service).toBe('netflix-household');
+    expect(result?.value).toContain('OUTER_TOKEN');
+  });
+});
+
 describe('matchEmail — defensive branches', () => {
   it('uses match[0] when the subject is missing entirely (undefined)', () => {
     // Covers the `parsed.subject ?? ''` fallback branch where subject is

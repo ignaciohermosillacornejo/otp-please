@@ -91,12 +91,28 @@ export function verifyForwarder(
 }
 
 /**
- * Lowercase, trim surrounding whitespace, and strip a single layer of
- * angle brackets. Used for smtp.mailfrom values (sometimes `<a@b>`) and
- * the configured TRUSTED_FORWARDER value.
+ * Lowercase, trim surrounding whitespace, strip a single layer of
+ * angle brackets, and — for gmail.com / googlemail.com addresses —
+ * remove dots from the local-part. Used for smtp.mailfrom values
+ * (sometimes `<a@b>`) and the configured TRUSTED_FORWARDER value.
+ *
+ * Gmail dot normalization: Google treats `foo.bar@gmail.com` and
+ * `foobar@gmail.com` as the same mailbox. Outbound SPF stamps the
+ * envelope with whichever canonical form the account uses, which may
+ * differ from the form the deployer configured in TRUSTED_FORWARDER.
+ * Stripping dots on both sides makes the comparison correct for any
+ * variant of a Gmail address.
  */
 function normalizeAddress(value: string): string {
-  return value.trim().replace(/^<|>$/g, '').trim().toLowerCase();
+  const bare = value.trim().replace(/^<|>$/g, '').trim().toLowerCase();
+  const atIdx = bare.lastIndexOf('@');
+  if (atIdx === -1) return bare;
+  const local = bare.slice(0, atIdx);
+  const domain = bare.slice(atIdx + 1);
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    return `${local.replace(/\./g, '')}@${domain}`;
+  }
+  return bare;
 }
 
 export default {
