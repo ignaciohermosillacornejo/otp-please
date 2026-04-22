@@ -279,7 +279,13 @@ describe('email() handler', () => {
     // Privacy: the skip log must NOT include the envelope from/to or
     // any authentication header content.
     expect(logs).toHaveLength(1);
-    expect(logs[0]).toBe('skip: forwarder verification failed (envelope rejected)');
+    // New diagnostic envelope line: prefix intact, plus SPF result and
+    // the two normalized domains (no local-parts).
+    expect(logs[0]).toMatch(
+      /^skip: forwarder verification failed \(envelope rejected\) spf=fail mailfrom-domain=example\.com configured-domain=example\.com$/,
+    );
+    // Neither the envelope address nor the configured TRUSTED_FORWARDER
+    // local-part must appear in the log — domain-only is intentional.
     expect(logs[0]).not.toContain('owner@example.com');
     expect(logs[0]).not.toContain('codes@example.com');
   });

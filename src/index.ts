@@ -123,12 +123,24 @@ export default {
   ): Promise<void> {
     const authResults = message.headers.get('Authentication-Results');
     if (!verifyForwarder(authResults, env.TRUSTED_FORWARDER)) {
-      // Redact both envelope parties. In the Gmail-forwarded flow,
-      // message.from IS the trusted forwarder's Gmail address — logging
-      // it on a transient SPF failure would leak the forwarder identity
-      // into Worker logs, contrary to the project's privacy stance.
-      // message.to is similarly a private inbound routing address.
-      console.log('skip: forwarder verification failed (envelope rejected)');
+      // Log a redacted breakdown of what the envelope produced vs what
+      // we were configured to trust. No full addresses / local-parts —
+      // only SPF result, mailfrom domain, and configured domain. This
+      // is enough to diagnose the two common failure modes (Gmail
+      // stamping a different domain like googlemail.com / SRS rewrite,
+      // or an empty TRUSTED_FORWARDER secret) without leaking either
+      // party's identity into Worker logs.
+      const stripped = (authResults ?? '').replace(/\([^)]*\)/g, '');
+      const spfResult = stripped.match(/\bspf=(\w+)/i)?.[1] ?? 'absent';
+      const mailfromMatch = stripped.match(/\bsmtp\.mailfrom=([^\s;()]+)/i);
+      const gotDomain = mailfromMatch
+        ? (normalizeAddress(mailfromMatch[1]).split('@')[1] ?? 'malformed')
+        : 'absent';
+      const configuredDomain =
+        normalizeAddress(env.TRUSTED_FORWARDER).split('@')[1] ?? 'malformed';
+      console.log(
+        `skip: forwarder verification failed (envelope rejected) spf=${spfResult} mailfrom-domain=${gotDomain} configured-domain=${configuredDomain}`,
+      );
       return;
     }
 
