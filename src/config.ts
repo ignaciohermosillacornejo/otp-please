@@ -10,5 +10,4 @@ export interface Env {
   DASHBOARD_TITLE: string;
   FOOTER_TEXT: string;
   TRUSTED_FORWARDER: string;
-  TAILSCALE_PROBE_URL: string;
 }

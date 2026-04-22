@@ -1,39 +1,513 @@
+Delivered-To: codes@example.com
+Authentication-Results: mx.example.com;
+       dkim=pass header.i=@<original-d> header.s=fake-selector;
+       spf=pass smtp.mailfrom=<bounce@example.invalid>;
+       dmarc=pass
 From: Netflix <info@account.netflix.com>
 To: codes@example.com
 Subject: Your Netflix temporary access code
-Date: Sat, 19 Apr 2026 12:20:05 +0000
-Message-ID: <netflix-travel-001@account.netflix.com>
+Date: Mon, 01 Jan 2026 12:00:00 +0000
+Message-ID: <netflix-travel-001@example.com>
 MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="boundary-netflix-travel"
+Content-Type: multipart/alternative; boundary="----=_FixtureBoundary_3c6e6574666c6978"
 
---boundary-netflix-travel
+------=_FixtureBoundary_3c6e6574666c6978
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi user,
+Your Netflix temporary access code
 
-Travelling? Get temporary access to Netflix from this device by verifying
-with the account owner.
+Your temporary access code
 
-Get code:
-https://www.netflix.com/account/travel/FAKE_TRAVEL_TOKEN_0002
+Hi User,
 
-This link expires in 15 minutes.
+We received a request for a temporary access code from the
+device below.
 
-Thanks,
+If this was you, or someone who lives with you, you can get
+a temporary access code to watch.
+
+This code is for travel or temporary access outside your
+Netflix Household. Please don’t send this code to anyone
+else.
+
+ 
+
+ 
+ 
+
+Get Code
+[https://www.netflix.com/account/travel/verify?nftoken=FAKE_NFTOKEN&messageGuid=FAKE_GUID]
+
+* Link expires after 15 minutes.
+
+ 
+
+Keep your account secure: If you don't know who this was, we
+recommend that you immediately sign out of all devices that
+you don't recognize
+[https://www.netflix.com/ManageAccountAccess?g=FAKE_GUID&lkid=URL_MANAGE_ACCOUNT_ACCESS&lnktrk=EVO&nftoken=FAKE_NFTOKEN].
+You can also change your password
+[https://www.netflix.com/password?g=FAKE_GUID&lkid=URL_PASSWORD&lnktrk=EVO&nftoken=FAKE_NFTOKEN].
+
+We're here to help
+
+Visit the Help Center
+[https://help.netflix.com/help?g=FAKE_GUID&lkid=URL_HELP&lnktrk=EVO]
+for more info.
+
 The Netflix team
 
---boundary-netflix-travel
+ 
+ 
+
+   Questions? Visit the Help Center
+   [https://help.netflix.com/help?g=FAKE_GUID&lkid=URL_HELP_QUESTIONS&lnktrk=EVO]
+   
+   121 Albright Way, Los Gatos, CA 95032, U.S.A.
+   [https://help.netflix.com/legal/corpinfo?g=FAKE_GUID&lkid=URL_CORP_INFO&lnktrk=EVO]
+   
+   Notification Settings
+   [https://www.netflix.com/notificationsettings/email?g=FAKE_GUID&lkid=URL_COMM_SETTINGS&lnktrk=EVO&id=FAKE_OPAQUE_ID&mid=none]
+   Terms of Use
+   [https://www.netflix.com/TermsOfUse?g=FAKE_GUID&lkid=URL_TERMS&lnktrk=EVO]
+   Privacy
+   [https://www.netflix.com/PrivacyPolicy?g=FAKE_GUID&lkid=URL_PRIVACY&lnktrk=EVO]
+   Help Center
+   [https://help.netflix.com/help?g=FAKE_GUID&lkid=URL_HELP&lnktrk=EVO]
+   
+   This message was mailed to [codes@example.com]
+   [https://www.netflix.com/browse?g=FAKE_GUID&lkid=URL_EMAIL&lnktrk=EVO]
+   by Netflix as part of your Netflix membership.
+   SRC: FAKE_SRC_PREFIX_FAKE_GUID_en_CL_EVO
+   [https://www.netflix.com/browse?g=FAKE_GUID&lkid=URL_SRC&lnktrk=EVO]
+
+------=_FixtureBoundary_3c6e6574666c6978
 Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-<html><body>
-<p>Hi user,</p>
-<p>Travelling? Get temporary access to Netflix from this device by
-verifying with the account owner.</p>
-<p><a href="https://www.netflix.com/account/travel/FAKE_TRAVEL_TOKEN_0002">Get code</a></p>
-<p>This link expires in 15 minutes.</p>
-<p>Thanks,<br>The Netflix team</p>
-</body></html>
 
---boundary-netflix-travel--
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" style="background-color: #e5e5e5; margin-top: 0; padding: 0; margin: 0;">
+    <head>
+      <meta http-equiv="Content-Type" content="text/html charset=UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="format-detection" content="telephone=no">
+      <style type="text/css">
+@media (max-width: 499px) {
+  u + .body .inbox-fix,
+u + .body .content-shell-table,
+u + .body .footer-shell-table,
+u + .body .footer {
+    min-width: 91.5vw !important;
+  }
+
+  .mobile-hide,
+.ios-hide {
+    display: none !important;
+  }
+
+  .desktop-hide,
+.desktop-hide img {
+    display: initial !important;
+  }
+
+  table.desktop-hide {
+    display: table !important;
+  }
+
+  .mobile-100w {
+    width: 100% !important;
+  }
+
+  .mobile-block {
+    display: block !important;
+  }
+
+  .mobile-center {
+    margin: 0 auto;
+    text-align: center !important;
+  }
+
+  .inner-padding {
+    padding-left: 6% !important;
+    padding-right: 6% !important;
+  }
+
+  .outside-padding {
+    padding-left: 12% !important;
+    padding-right: 12% !important;
+  }
+
+  .content-padding {
+    padding-left: 6% !important;
+    padding-right: 6% !important;
+  }
+
+  .desktop-hide-max,
+.desktop-hide-max img {
+    display: initial !important;
+  }
+}
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (max-width: 499px) {
+  .container.main-border {
+    padding: 0 !important;
+  }
+
+  .content-shell {
+    border: none !important;
+  }
+}
+@media yahoo {
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  table table {
+    table-layout: auto;
+  }
+}
+.hide-link a,
+.iosnonlink a,
+.hide-link {
+  text-decoration: none !important;
+  cursor: text;
+}
+@media (max-width: 499px) {
+  .evergreen-revamp .content-padding {
+    padding-left: 3.2% !important;
+    padding-right: 3.2% !important;
+  }
+}
+@media screen {
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Lt.woff");
+    font-weight: 300;
+  }
+
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Rg.woff");
+    font-weight: 400;
+  }
+
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Md.woff");
+    font-weight: 500;
+  }
+
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Bd.woff");
+    font-weight: 700;
+  }
+}
+@media screen {
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Lt.woff");
+    font-weight: 300;
+  }
+
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Rg.woff");
+    font-weight: 400;
+  }
+
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Md.woff");
+    font-weight: 500;
+  }
+
+  @font-face {
+    font-family: "Netflix Sans";
+    src: url("https://assets.nflxext.com/us/email/fonts/v2/NetflixSans_Bd.woff");
+    font-weight: 700;
+  }
+}
+@media (max-width: 499px) {
+  .color-wrapper {
+    width: 100% !important;
+  }
+}
+@media (max-width: 499px) {
+  .bullet .indent.true {
+    width: 8% !important;
+  }
+
+  .bullet .indent.true {
+    padding-left: 3% !important;
+  }
+
+  .envelope.rtl .bullet .indent.true {
+    padding-right: 3% !important;
+  }
+}
+@media (max-width: 499px) {
+  .bullet-point {
+    line-height: 22px !important;
+  }
+}
+@media (max-width: 768px) {
+  .icon {
+    padding-top: 4px !important;
+  }
+}
+@media (max-width: 499px) {
+  .image .default-image-width img {
+    width: 100%;
+  }
+}
+@media (max-width: 499px) {
+  .mobile-hide-max,
+.ios-hide-max {
+    display: none !important;
+  }
+
+  .inbox-fix {
+    display: none;
+  }
+
+  .desktop-hide-max,
+.desktop-hide-max img {
+    display: initial !important;
+  }
+
+  table.content-shell-table,
+table.footer-shell-table,
+.footer {
+    width: 100% !important;
+  }
+
+  .content {
+    width: 100% !important;
+  }
+}
+.footer-shell .footer-link {
+  line-height: 20px;
+}
+@media (max-width: 499px) {
+  u + .body .gmail-screen {
+    background: #000;
+    mix-blend-mode: screen;
+  }
+
+  u + .body .gmail-difference {
+    background: #000;
+    mix-blend-mode: difference;
+  }
+}
+@media (max-width: 500px) {
+  .button-copy a {
+    padding: 13px 0px !important;
+    width: 100% !important;
+  }
+}
+@media (min-width: 501px) {
+  .button-copy a {
+    padding: 13px 40px;
+  }
+}
+@media (max-width: 499px) {
+  .image .default-image-width img {
+    width: 100%;
+  }
+
+  .artwork img {
+    width: 100% !important;
+  }
+
+  .number img {
+    width: 100% !important;
+  }
+}
+@media (max-width: 499px) {
+  .episode-content-cell {
+    width: 40% !important;
+  }
+
+  .episode-content-cell-image {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .episode-content-cell-progress-bar {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+@media (max-width: 499px) {
+  .exp-img-1 img {
+    width: 70% !important;
+  }
+
+  .exp-img-2 {
+    padding-left: 20px !important;
+  }
+
+  .exp-img-2 img {
+    width: 85% !important;
+  }
+
+  .exp-img-3 img {
+    width: 85% !important;
+  }
+
+  .exp-img-4 img {
+    width: 85% !important;
+  }
+
+  .calendar img {
+    width: 85% !important;
+    height: auto !important;
+  }
+}
+@media (max-width: 499px) {
+  .logo-with-horizontal-date-logo-image-cell {
+    width: 60% !important;
+  }
+}
+@media (max-width: 499px) {
+  .thumbs-button-image-width {
+    width: 80% !important;
+  }
+
+  .thumbs-button-cell-spacer {
+    width: 6% !important;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .module-kar-hero-inner-body-cell {
+    width: 88% !important;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .module-kar-hero-inner-body-cell {
+    width: 88% !important;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .module-kar-themed-category-spacer-td {
+    height: 12px !important;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .right-pencil-image img {
+    width: 75% !important;
+    height: auto !important;
+  }
+
+  .left-pencil-image img {
+    width: 85% !important;
+    height: auto !important;
+  }
+
+  .left-pencil-cell {
+    width: 30% !important;
+  }
+
+  .right-pencil-cell {
+    width: 30% !important;
+  }
+
+  .color-page-cell {
+    width: 40% !important;
+  }
+
+  .printable-logo-image img {
+    width: 40% !important;
+    height: auto !important;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .module-kar-theme-bars-images img {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+@media (max-width: 499px) {
+  .evidence-cards-component-image-cell {
+    width: 12% !important;
+  }
+}
+@media (max-width: 499px) {
+  .evidence-images img {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+@media (max-width: 499px) {
+  .marker {
+    padding: 5px 7px 5px 7px !important;
+  }
+}
+@media (max-width: 499px) {
+  .evidence-trailer-component-image-cell {
+    width: 12% !important;
+  }
+}
+@media only screen and (max-width: 500px) {
+  .main-header-icon-cell {
+    width: 12% !important;
+  }
+
+  .header-copy-cell {
+    width: 85% !important;
+  }
+
+  .header-copy-cell-with-profile-icon {
+    width: 78% !important;
+  }
+
+  .netflix-logo-cell {
+    width: 10% !important;
+  }
+}
+@media (max-width: 500px) {
+  .mosaic-module .middle {
+    width: 46% !important;
+    padding-right: 4% !important;
+    padding-left: 4% !important;
+  }
+
+  .mosaic-module .left,
+.mosaic-module .right {
+    width: 24.8% !important;
+  }
+
+  .mosaic-module .component-image.cell,
+.mosaic-module .single-button .content-padding {
+    padding-top: 15px !important;
+  }
+}
+@media (max-width: 499px) {
+  .sidepadding-88 {
+    padding-left: 23% !important;
+    padding-right: 23% !important;
+  }
+}
+@media (max-width: 499px) {
+  .nfl2024 .hero + .spacer-table .spacer {
+    height: 44vw !important;
+  }
+}
+@media (min-width: 500px) {
+  .lewis-content-treatment .content {
+    background-size: contain;
+  }
+}
+</style>
+    </head>
+    <body class="body" style="background-color: #e5e5e5; margin-top: 0; padding: 0; margin: 0;">
+      <div class="hide" data-testid="preview-text" style="display: none; width: 0; height: 0; max-height: 0; line-height: 0; mso-hide: all; overflow: hidden; visibility: hidden;">Your Netflix temporary access code<br><div class="hide disabled-plaintext" style="display: none; width: 0; height: 0; max-height: 0; line-height: 0; mso-hide: all; overflow: hidden; visibility: hidden;">&#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &nbsp;</div></div><table width="100%" border="0" class="envelope account  " data-testid="envelope" cellpadding="0" cellspacing="0" style="background-color: #e5e5e5;" bgcolor="#e5e5e5"><tbody><tr><td align="center" class="container" style="background-color: #e5e5e5; margin-top: 0;" bgcolor="#e5e5e5"><table align="center" border="0" class="content" cellpadding="0" cellspacing="0" style="background-color: #ffffff; width: 500px;" width="500" bgcolor="#ffffff"><tbody><tr class="tracking-pixel"><td><table class="tracking-pixel disabled-plaintext image" width="100%" data-testid="image" cellpadding="0" cellspacing="0"><tbody><tr><td class="cell tracking-pixel disabled-plaintext content-padding" align="center" style="padding-left: 40px; padding-right: 40px; padding-top: 0;"><img src="https://beaconimages.netflix.net/img/FAKE_BEACON_BLOB" alt width="0" border="0" class="undefined " style="-ms-interpolation-mode: bicubic; border: none; outline: none; border-collapse: collapse; display: block;"></td></tr></tbody></table></td></tr><tr><td align="center" class="shell"><a href="https://www.netflix.com/browse?g=FAKE_GUID&amp;lkid=URL_LOGO&amp;lnktrk=EVO" class="disabled-plaintext" data-testid="logo" style="color: inherit;"><table class="logo image" width="100%" data-testid="image" cellpadding="0" cellspacing="0"><tbody><tr><td class="cell logo content-padding" align="left" style="padding-left: 40px; padding-right: 40px; padding-top: 20px;"><img src="https://assets.nflxext.com/us/email/gem/nflx.png" alt="Netflix" width="24" border="0" class="undefined " style="-ms-interpolation-mode: bicubic; border: none; outline: none; border-collapse: collapse; display: block; border-style: none;"></td></tr></tbody></table></a><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy h2 content-padding" style="padding-left: 40px; padding-right: 40px; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 700; font-size: 30px; line-height: 36px; letter-spacing: -0.75px; color: #232323; padding-top: 20px;">Your temporary access code</td></tr></tbody></table><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p content-padding" style="padding-left: 40px; padding-right: 40px; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 16px; line-height: 21px; color: #232323; padding-top: 20px;">Hi <span class="break-word" style="word-break: break-all;">User</span>,</td></tr></tbody></table><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p content-padding" style="padding-left: 40px; padding-right: 40px; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 16px; line-height: 21px; color: #232323; padding-top: 20px;">We received a request for a temporary access code from the device below.<br><br>If this was you, or someone who lives with you, you can get a temporary access code to watch.<br><br>This code is for travel or temporary access outside your Netflix Household. Please don’t send this code to anyone else.</td></tr></tbody></table><table width="100%" class="spacer-table" data-testid="spacer" cellpadding="0" cellspacing="0"><tbody><tr><td class="spacer" style="font-size: 0; line-height: 0; height: 20px;" height="20"> </td></tr></tbody></table><table class="bg-color-wrapper account-info-card" width="100%" data-testid="bgColorWrapper" cellpadding="0" cellspacing="0"><tbody><tr><td class="content-padding" style="padding-left: 40px; padding-right: 40px;"><table class="color-wrapper" width="100%" cellpadding="0" cellspacing="0"><tbody><tr><td class="inner-wrapper drop-shadow-true" bgcolor="#FFFFFF" style="box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1); padding-bottom: 0; border: 1px solid #eaeaea; border-radius: 8px; background-color: #FFFFFF;"><table class="profile-card " width="100%" data-testid="profile-icon-display" cellpadding="0" cellspacing="0"><tbody><tr><td class="spacer height" style="font-size: 0; line-height: 0; height: 20px;" height="20"> </td></tr><tr><td class="spacer width" style="font-size: 0; line-height: 0; height: 20px; width: 20px;" width="20" height="20"> </td><td class="profile-icon" style="width: 1%; padding: 0 12px 0 0; vertical-align: top; padding-top: 3px;" width="1%" valign="top"><table class="component-image image" width="100%" data-testid="image" cellpadding="0" cellspacing="0"><tbody><tr><td class="cell component-image none" align="center" style="padding-top: 0;"><img src="https://dnm.nflximg.net/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABTZ2zlLdBVC05fsd2YQAR43J6vB1NAUBOOrxt7oaFATxMhtdzlNZ846H3D8TZzooe2-FT853YVYs8p001KVFYopWi4D4NXM.png?r=229" alt width="16" border="0" class="inner-radius " style="-ms-interpolation-mode: bicubic; border: none; outline: none; border-collapse: collapse; display: block; border-radius: 4px;"></td></tr></tbody></table></td><td class="profile-info" valign="top" style="padding: 0 20px 0 0;"><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p none" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 16px; line-height: 21px; color: #232323; padding-top: 0;">Requested by User from a <b style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 700;">Apple - iPhone</b> at November 8th, 8:16 PM GMT-5</td></tr></tbody></table></td></tr></tbody></table><table class="single-button mobile-100w " align="center" width="100%" data-testid="single-button" cellpadding="0" cellspacing="0"><tbody><tr><td class="content-padding" style="padding-left: 20px; padding-right: 20px; padding-top: 20px;" align="center"><table class="inner-button border-false" style="border-radius:4px;background-color:rgb(229,9,20);width:100%" cellpadding="0" cellspacing="0"><tbody><tr><td class="h5 button-td" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 700; font-size: 14px; line-height: 17px; letter-spacing: -0.2px; padding: 12px; color: rgb(255,255,255);" align="center"><a class="h5" href="https://www.netflix.com/account/travel/verify?nftoken=FAKE_NFTOKEN&amp;messageGuid=FAKE_GUID" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 700; font-size: 14px; line-height: 17px; letter-spacing: -0.2px; text-align: center; text-decoration: none; display: block; color: rgb(255,255,255);">Get Code</a></td></tr></tbody></table></td></tr></tbody></table><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p2 content-padding" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 12px; line-height: 15px; letter-spacing: -0.12px; padding-left: 20px; padding-right: 20px; padding-top: 10px; color: #696666;">* Link expires after 15 minutes.</td></tr></tbody></table><table width="100%" class="spacer-table" data-testid="spacer" cellpadding="0" cellspacing="0"><tbody><tr><td class="spacer" style="font-size: 0; line-height: 0; height: 20px;" height="20"> </td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p content-padding" style="padding-left: 40px; padding-right: 40px; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 16px; line-height: 21px; color: #232323; padding-top: 20px;"><b style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 700;">Keep your account secure:</b> If you don&#x27;t know who this was, we recommend that you immediately <a href="https://www.netflix.com/ManageAccountAccess?g=FAKE_GUID&amp;lkid=URL_MANAGE_ACCOUNT_ACCESS&amp;lnktrk=EVO&amp;nftoken=FAKE_NFTOKEN" style="color: inherit; text-decoration: underline;">sign out of all devices that you don&#x27;t recognize</a>. You can also <a href="https://www.netflix.com/password?g=FAKE_GUID&amp;lkid=URL_PASSWORD&amp;lnktrk=EVO&amp;nftoken=FAKE_NFTOKEN" style="color: inherit; text-decoration: underline;">change your password</a>.</td></tr></tbody></table><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy bold content-padding" style="padding-left: 40px; padding-right: 40px; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 700; color: #232323; padding-top: 20px;">We&#x27;re here to help</td></tr></tbody></table><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p content-padding" style="padding-left: 40px; padding-right: 40px; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 16px; line-height: 21px; color: #232323; padding-top: 6px;">Visit the <a href="https://help.netflix.com/help?g=FAKE_GUID&amp;lkid=URL_HELP&amp;lnktrk=EVO" style="color: inherit; text-decoration: underline;">Help Center</a> for more info.</td></tr></tbody></table><table align="left" width="100%" class="copy-table " data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy h5 medium content-padding" style="padding-left: 40px; padding-right: 40px; font-size: 14px; line-height: 17px; letter-spacing: -0.2px; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 500; font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; color: #232323; padding-top: 20px;">The Netflix team</td></tr></tbody></table><table width="100%" data-testid="divider" cellpadding="0" cellspacing="0"><tbody><tr><td class="divider content-padding" style="padding-left: 40px; padding-right: 40px; padding-top: 30px;"><table align="center" width="100%" cellpadding="0" cellspacing="0"><tbody><tr><td class="empty divider-border" style="font-size: 0; line-height: 0; border-style: solid; border-bottom-width: 0; border-color: #221F1F; border-top-width: 2px;"> </td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td align="center" class="footer-shell" style="background-color: #ffffff;" bgcolor="#ffffff"><table class="footer" width="100%" border="0" data-testid="footer" cellpadding="0" cellspacing="0"><tbody><tr><td align="center" valign="top" class="footer-shell content-padding" style="padding-left: 40px; padding-right: 40px; background-color: #ffffff;" bgcolor="#ffffff"><table width="100%" class="spacer-table" data-testid="spacer" cellpadding="0" cellspacing="0"><tbody><tr><td class="spacer" style="font-size: 0; line-height: 0; height: 40px;" height="40"> </td></tr></tbody></table><table width="100%" class="outer-footer-table" cellpadding="0" cellspacing="0"><tbody><tr><td valign="top" class="footer-icon-wrapper" style="padding: 0 20px 0 0;"><table class="component-image image" width="100%" data-testid="image" cellpadding="0" cellspacing="0"><tbody><tr><td class="cell component-image none" align="center" style="padding-top: 0;"><img src="https://assets.nflxext.com/us/email/gem/nflx.png" alt width="24" border="0" class="undefined " style="-ms-interpolation-mode: bicubic; border: none; outline: none; border-collapse: collapse; display: block;"></td></tr></tbody></table></td><td valign="top" class="footer-copy-wrapper"><table class="footer-table" width="100%" valign="top" cellpadding="0" cellspacing="0"><tbody><tr><td class="footer-copy-shell"><table align="left" width="100%" class="copy-table footer-copy phone-number" data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p1 none" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 14px; line-height: 18px; letter-spacing: -0.25px; color: #a4a4a4; padding-top: 0;"><span class="ignore-diff" data-testid="phone-number">Questions? Visit the <a href="https://help.netflix.com/help?g=FAKE_GUID&amp;lkid=URL_HELP_QUESTIONS&amp;lnktrk=EVO" style="text-decoration: underline; color: #a4a4a4;"><span class="footer-link-bold">Help Center</span></a></span></td></tr></tbody></table><table align="left" width="100%" class="copy-table footer-copy address" data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy legal none" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 11px; line-height: 14px; letter-spacing: -0.1px; color: #a4a4a4; padding-top: 0;"><span class="hide-link" style="cursor: text; text-decoration: none;"><a href="https://help.netflix.com/legal/corpinfo?g=FAKE_GUID&amp;lkid=URL_CORP_INFO&amp;lnktrk=EVO" style="cursor: text; color: #a4a4a4; text-decoration: none;"><span data-testid="address">121 Albright Way, Los Gatos, CA 95032, U.S.A.</span></a></span></td></tr></tbody></table><table align="left" width="100%" class="copy-table legal-links" data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy p2 none" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 12px; line-height: 15px; letter-spacing: -0.12px; padding-top: 20px; color: #a9a6a6;"><span data-testid="footer-legal-links"><a class="footer-link comms" href="https://www.netflix.com/notificationsettings/email?g=FAKE_GUID&amp;lkid=URL_COMM_SETTINGS&amp;lnktrk=EVO&amp;id=FAKE_OPAQUE_ID&amp;mid=none" style="text-decoration: underline; line-height: 20px; color: #a4a4a4;">Notification Settings</a><br><a class="footer-link tou" href="https://www.netflix.com/TermsOfUse?g=FAKE_GUID&amp;lkid=URL_TERMS&amp;lnktrk=EVO" style="text-decoration: underline; line-height: 20px; color: #a4a4a4;">Terms of Use</a><br><a class="footer-link privacy" href="https://www.netflix.com/PrivacyPolicy?g=FAKE_GUID&amp;lkid=URL_PRIVACY&amp;lnktrk=EVO" style="text-decoration: underline; line-height: 20px; color: #a4a4a4;">Privacy</a><br><a class="footer-link help-center" href="https://help.netflix.com/help?g=FAKE_GUID&amp;lkid=URL_HELP&amp;lnktrk=EVO" style="text-decoration: underline; line-height: 20px; color: #a4a4a4;">Help Center</a></span></td></tr></tbody></table><table align="left" width="100%" class="copy-table footer-copy disclaimer" data-testid="copy" cellpadding="0" cellspacing="0"><tbody><tr><td align="left" class="copy legal none" style="font-family: 'Netflix Sans', 'Helvetica Neue', Roboto, Segoe UI, sans-serif; font-weight: 400; font-size: 11px; line-height: 14px; letter-spacing: -0.1px; color: #a4a4a4; padding-top: 20px;"><span data-testid="footer-disclaimer">This message was mailed to <a href="https://www.netflix.com/browse?g=FAKE_GUID&amp;lkid=URL_EMAIL&amp;lnktrk=EVO" class="hide-link ignore-diff" style="cursor: text; color: #a4a4a4; text-decoration: none;">[codes@example.com]</a> by Netflix as part of your Netflix membership.</span><br>SRC: <a href="https://www.netflix.com/browse?g=FAKE_GUID&amp;lkid=URL_SRC&amp;lnktrk=EVO" class="hide-link ignore-diff" style="cursor: text; color: #a4a4a4; text-decoration: none;">FAKE_SRC_PREFIX_FAKE_GUID_en_CL_EVO</a></td></tr></tbody></table><table width="100%" class="spacer-table" data-testid="spacer" cellpadding="0" cellspacing="0"><tbody><tr><td class="spacer" style="font-size: 0; line-height: 0; height: 40px;" height="40"> </td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><div class="mobile-hide-max gmail-fix-no-inline" data-testid="gmail-fix" style="white-space: 'nowrap'; font: '15px courier'; line-height: 0;">                                                           </div>
+    </body>
+    </html>
+  
+
+------=_FixtureBoundary_3c6e6574666c6978--

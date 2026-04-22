@@ -47,7 +47,6 @@ function makeEnv(overrides: Partial<Env> = {}): { env: Env; kv: FakeKV } {
     DASHBOARD_TITLE: 'Streaming Codes',
     FOOTER_TEXT: '',
     TRUSTED_FORWARDER: 'owner@example.com',
-    TAILSCALE_PROBE_URL: '',
     ...overrides,
   };
   return { env, kv };
@@ -216,26 +215,26 @@ describe('email() handler', () => {
   it('stores exactly one KV entry for a recognized, trusted email', async () => {
     const { env, kv } = makeEnv();
     const message = makeMessage({
-      raw: loadFixture('netflix-signin.eml'),
+      raw: loadFixture('disney-signin.eml'),
       headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
-      from: 'info@account.netflix.com',
+      from: 'disneyplus@trx.mail2.disneyplus.com',
     });
 
     await worker.email!(message, env, fakeCtx());
 
     expect(kv.puts).toHaveLength(1);
-    expect(kv.puts[0].key).toBe('entry:netflix');
+    expect(kv.puts[0].key).toBe('entry:disney');
     const stored = JSON.parse(kv.puts[0].value);
     expect(stored.type).toBe('code');
-    expect(stored.service).toBe('netflix');
-    expect(stored.value).toBe('1234');
-    expect(stored.subject).toBe('Your Netflix sign-in code');
+    expect(stored.service).toBe('disney');
+    expect(stored.value).toBe('111111');
+    expect(stored.subject).toBe('Tu código de acceso único para Disney+');
   });
 
   it('writes nothing when forwarder verification fails', async () => {
     const { env, kv } = makeEnv();
     const message = makeMessage({
-      raw: loadFixture('netflix-signin.eml'),
+      raw: loadFixture('disney-signin.eml'),
       headers: {
         'Authentication-Results':
           'mx.cloudflare.com; spf=fail smtp.mailfrom=owner@example.com',
@@ -262,7 +261,7 @@ describe('email() handler', () => {
   it('writes nothing when the Authentication-Results header is missing', async () => {
     const { env, kv } = makeEnv();
     const message = makeMessage({
-      raw: loadFixture('netflix-signin.eml'),
+      raw: loadFixture('disney-signin.eml'),
       headers: {},
     });
 
@@ -295,9 +294,9 @@ describe('email() handler', () => {
       throw new Error('kv outage');
     };
     const message = makeMessage({
-      raw: loadFixture('netflix-signin.eml'),
+      raw: loadFixture('disney-signin.eml'),
       headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
-      from: 'info@account.netflix.com',
+      from: 'disneyplus@trx.mail2.disneyplus.com',
     });
     const logs: string[] = [];
     vi.mocked(console.log).mockImplementation((msg: string) => {
@@ -305,11 +304,11 @@ describe('email() handler', () => {
     });
 
     await expect(worker.email!(message, env, fakeCtx())).resolves.toBeUndefined();
-    expect(logs.some((l) => l.startsWith('err: KV write failed for netflix'))).toBe(
+    expect(logs.some((l) => l.startsWith('err: KV write failed for disney'))).toBe(
       true,
     );
     // The error log must NOT contain the extracted code.
-    expect(logs.every((l) => !l.includes('1234'))).toBe(true);
+    expect(logs.every((l) => !l.includes('111111'))).toBe(true);
   });
 
   it('swallows non-Error throws from KV (string rejection) without crashing', async () => {
@@ -321,9 +320,9 @@ describe('email() handler', () => {
       throw 'kv string error';
     };
     const message = makeMessage({
-      raw: loadFixture('netflix-signin.eml'),
+      raw: loadFixture('disney-signin.eml'),
       headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
-      from: 'info@account.netflix.com',
+      from: 'disneyplus@trx.mail2.disneyplus.com',
     });
     const logs: string[] = [];
     vi.mocked(console.log).mockImplementation((msg: string) => {
@@ -351,15 +350,15 @@ describe('fetch() handler', () => {
   it('GET /api returns 200 application/json with the entries Record', async () => {
     const { env, kv } = makeEnv();
     // Seed one service to prove readAllEntries pass-through.
-    const netflixEntry = {
+    const disneyEntry = {
       type: 'code',
-      service: 'netflix',
-      value: '4242',
+      service: 'disney',
+      value: '424242',
       received_at: '2026-04-20T11:55:00.000Z',
       valid_until: '2026-04-20T12:10:00.000Z',
-      subject: 'sign-in',
+      subject: 'Your Disney+ sign-in code',
     };
-    await kv.put('entry:netflix', JSON.stringify(netflixEntry));
+    await kv.put('entry:disney', JSON.stringify(disneyEntry));
 
     const request = new Request('https://otp.example.com/api');
     const response = await worker.fetch!(request, env, fakeCtx());
@@ -369,12 +368,13 @@ describe('fetch() handler', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
 
     const body = (await response.json()) as Record<string, unknown>;
-    expect(body.netflix).toEqual(netflixEntry);
+    expect(body.disney).toEqual(disneyEntry);
     // Services with no entry still appear as null slots.
-    expect(body).toHaveProperty('disney', null);
-    expect(body).toHaveProperty('max', null);
-    expect(body).not.toHaveProperty('amazon');
     expect(body).toHaveProperty('netflix-household', null);
+    expect(body).toHaveProperty('max', null);
+    // Dropped services must NOT appear in the /api payload.
+    expect(body).not.toHaveProperty('netflix');
+    expect(body).not.toHaveProperty('amazon');
   });
 
   it('GET / returns 200 text/html with the dashboard title and CSP header', async () => {
@@ -418,20 +418,20 @@ describe('fetch() handler', () => {
   it('GET / serves dashboard content for populated entries (end-to-end smoke)', async () => {
     const { env, kv } = makeEnv();
     await kv.put(
-      'entry:netflix',
+      'entry:max',
       JSON.stringify({
         type: 'code',
-        service: 'netflix',
-        value: '5555',
+        service: 'max',
+        value: '555555',
         received_at: '2026-04-20T11:59:00.000Z',
         valid_until: '2026-04-20T12:14:00.000Z',
-        subject: 'code',
+        subject: 'Your Max sign-in code',
       }),
     );
     const request = new Request('https://otp.example.com/');
     const response = await worker.fetch!(request, env, fakeCtx());
     const body = await response.text();
-    expect(body).toContain('data-code="5555"');
-    expect(body).toContain('5555');
+    expect(body).toContain('data-code="555555"');
+    expect(body).toContain('555555');
   });
 });

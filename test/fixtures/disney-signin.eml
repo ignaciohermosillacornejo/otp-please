@@ -1,40 +1,411 @@
-From: Disney+ <noreply@disneyplus.com>
+Delivered-To: codes@example.com
+Authentication-Results: mx.example.com;
+       dkim=pass header.i=@<original-d> header.s=fake-selector;
+       spf=pass smtp.mailfrom=<bounce@example.invalid>;
+       dmarc=pass
+From: Disney+ <disneyplus@trx.mail2.disneyplus.com>
 To: codes@example.com
-Subject: Your Disney+ one-time passcode
-Date: Sat, 19 Apr 2026 13:05:17 +0000
-Message-ID: <disney-signin-001@disneyplus.com>
+Subject: Tu código de acceso único para Disney+
+Date: Mon, 01 Jan 2026 12:00:00 +0000
+Message-ID: <disney-signin-001@example.com>
 MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="boundary-disney-signin"
+Content-Type: multipart/alternative; boundary="----=_FixtureBoundary_3c6469736e65792d"
 
---boundary-disney-signin
+------=_FixtureBoundary_3c6469736e65792d
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi there,
 
-Your Disney+ one-time passcode is:
-
-123456
-
-Please enter this code in the Disney+ app or site within the next 15
-minutes.
-
-If you didn't request this, you can safely ignore this email.
-
-Thanks,
-The Disney+ team
-
---boundary-disney-signin
+------=_FixtureBoundary_3c6469736e65792d
 Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-<html><body>
-<p>Hi there,</p>
-<p>Your Disney+ one-time passcode is:</p>
-<p style="font-size:28px;letter-spacing:6px;">123456</p>
-<p>Please enter this code in the Disney+ app or site within the next 15 minutes.</p>
-<p>If you didn't request this, you can safely ignore this email.</p>
-<p>Thanks,<br>The Disney+ team</p>
-</body></html>
 
---boundary-disney-signin--
+
+
+   
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="es-419">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;" charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--[if !mso]><!-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--<![endif]-->
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <style type="text/css">
+
+@font-face { font-family: 'Inspire'; font-style: normal; font-weight: 300; src: local('Inspire-Light'), url(https://static-assets.bamgrid.com/fonts/inspire/Inspire-Light.b5b519ba39ee378f6a241e3cf0ffcb06.woff) format('woff'); } @font-face { font-family: 'Inspire'; font-style: normal; font-weight: 400; src: local('Inspire-Regular'), url(https://static-assets.bamgrid.com/fonts/inspire/Inspire-Regular.c7d8596d5b575e25ed1bc78c4471d668.woff) format('woff'); } @font-face{ font-family: 'Inspire'; font-style: normal; font-weight: bold; src: local('Inspire-Bold'), url(https://static-assets.bamgrid.com/fonts/inspire/Inspire-Bold.b16fb94fbdeb4ab54a59175c7087e713.woff) format('woff'); } @font-face{ font-family: 'Inspire'; font-style: normal; font-weight: 900; src: local('Inspire-Black'), url(https://static-assets.bamgrid.com/fonts/inspire/Inspire-Black.d1d6e5a8a07e388af86a4e7a8fa5460f.woff) format('woff'); } @font-face { font-family: 'Inspire'; font-style: italic; font-weight: 400; src: local('Inspire-Italic'), url(https://static-assets.bamgrid.com/fonts/inspire/Inspire-Italic.d1a7e30c20a41faccf2df6bc835beb18.woff) format('woff'); } @font-face { font-family: 'Inspire'; font-style: italic; font-weight: bold; src: local('Inspire-BoldItalic'), url(https://static-assets.bamgrid.com/fonts/inspire/Inspire-BoldItalic.8aef219d0ebd33441e65837ae86355d6.woff) format('woff'); }
+
+        
+        .ReadMsgBody {
+            width: 100%;
+        }
+
+        /* Forces Hotmail to display emails at full width */
+        .ExternalClass {
+            width: 100%;
+        }
+
+        /* Hotmail table centering fix */
+        .ExternalClass,
+        .ExternalClass p,
+        .ExternalClass span,
+        .ExternalClass font,
+        .ExternalClass td,
+        .ExternalClass div {
+            line-height: 100%;
+        }
+
+        /* Forces Hotmail to display normal line spacing */
+        .ExternalClass * {
+            line-height: 100%
+        }
+
+        p {
+            margin: 1em 0;
+        }
+
+        /* Yahoo paragraph fix */
+        table td {
+            border-collapse: collapse;
+        }
+
+        /* Anti-aliasing font for Webkit-based browsers */
+        td,
+        span,
+        a,
+        b,
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* This resolves the Outlook 07, 10, and Gmail td padding issue fix */
+        /* This resolves the issue when iphone puts links on dates, etc. */
+        .appleLinksWhite a {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .appleLinksWhiteUL a {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .appleLinksWhite2 a {
+            color: #F9F9F9 !important;
+            text-decoration: none !important;
+        }
+
+        .appleLinksGray a {
+            color: #1f326f;
+            text-decoration: none;
+        }
+
+        .appleLinksGray2 a {
+            color: #707070;
+            text-decoration: none;
+        }
+
+        .appleLinksGray3 a {
+            color: #95a1bc !important;
+            text-decoration: none !important;
+        }
+
+        .appleLinksGray4 a {
+            color: #afafaf !important;
+            text-decoration: none !important;
+        }
+
+        .appleLinksGray5 a {
+            color: #c0c0c0 !important;
+            text-decoration: none !important;
+        }
+
+        .appleLinksGray5UL a {
+            color: #c0c0c0 !important;
+            text-decoration: underline;
+        }
+
+        .appleLinksBlack a {
+            color: #000000 !important;
+            text-decoration: none;
+        }
+
+        .appleLinksGreen a {
+            color: #1a3c34 !important;
+        }
+
+        .blueLinks,
+        .blueLinks a {
+            color: inherit !important;
+            text-decoration: none !important;
+        }
+
+        a.mobileshow,
+        .mobilehide {
+            display: none;
+            color: #fff;
+            /* for Gmail */
+        }
+
+        .tonline {
+            display: block !important;
+        }
+
+        .module, .module_1 {
+            margin: 0 !important;
+            border: none !important;
+        }
+        @media only screen and (max-width: 480px) {
+            #background {
+                background-color: #ffffff !important;
+            }
+        }
+        @media only screen and (max-width: 580px) {
+            .module, .module_1 {
+                margin-bottom: -1px !important;
+                border-width: 1px !important;
+            }
+        }
+      @media (prefers-color-scheme: dark) {
+        td.appleLinksWhite {
+          -webkit-text-fill-color: #ffffff !important;
+        }
+          .module_1 {
+           background-color: #202124 !important;
+          }
+      } 
+    </style>
+    <!--[if mso]>
+        <style>
+        td, a {
+        font-family: Arial, sans-serif !important;
+        }
+        .buttonLink, .button2Link {
+        background-color:transparent !important;
+        border: transparent !important;
+        }
+        </style>
+        <![endif]-->
+    <!--[if gte mso 9]>
+        <xml>
+        <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+        </xml>
+        <![endif]-->
+    <title>MyDisney Email</title>
+</head>
+
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="width:100% !important;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:0;background-image:none;background-repeat:repeat;background-position:top left;background-attachment:scroll;">
+    <span class="preheader" style="color:#F1F2F4;display:none!important;font-size:1px;line-height:1px;max-height:0;max-width:0;mso-hide:all!important;opacity:0;overflow:hidden;visibility:hidden">Este es tu código de acceso único.</span>
+    <!-- Insert &zwnj;&nbsp; hack after hidden preview text -->
+    <div style="display: none; max-height: 0px; overflow: hidden;"> &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+    </div>
+    <table id="background" role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" bgcolor="#F1F2F4">
+        <tr>
+            <td style="padding: 20px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="440" bgcolor="#F1F2F4" style="width: 440px !important;">
+                    <tr>
+                        <td align="center">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td>
+                                        <!-- START MyDisney_Header -->
+
+<table class="module" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" align="center">
+  <tr>
+    <td valign="top" align="center">
+      <table class="module" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" align="center">
+        <tr>
+          <td valign="top" align="center"><a href="https://us-east-1.mail2.disneyplus.com/CL0/https:%2F%2Fmy.disney.com/1/FAKE_SES_MSGID/oUGepbx8BNPdA_ob_S7F3gxTEbxR1-FSvmZyd-lGL6A=451" alias="Header_logo" mso-deep-link="true" style="text-decoration: none;"><img src="https://prod-ripcut-delivery.disney-plus.net/v1/variant/disney/2B8D814644D6D732CD8A2BD6B4E0757CAABF32B11746F2F23FA48461652FB578" alt="MyDisney" style="display: block;height: auto;color:#ffffff;font-family:Inspire, InspireTWDC, 'Trebuchet MS', Arial, sans-serif;font-size:20px;text-align: center; font-weight:normal;" width="440" border="0"></a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- END MyDisney_Header -->
+                                    </td>
+                                </tr>
+                                <!-- ====== START Body Modules ====== -->
+                                <!-- START Main_Body_Module -->
+                                
+                                
+                                <tr>
+                                    <td align="center" style="padding-bottom: 15px;">
+                                        <table class="module_1" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#ffffff" style="border-radius: 0px 0px 12px 12px;border:2px solid #ffffff;">
+                                            <tr>
+                                                <td>
+                                                    <table class="module" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#ffffff" style="border-radius: 0px 0px 12px 12px;border:2px solid #ffffff;">
+                                                        <tr>
+                                                            <td align="center" style="padding: 45px 45px 20px 45px;font-size: 35px; font-weight:600; color:#252526; font-family:'Noto Sans Display', Arial, sans-serif;; letter-spacing:normal; line-height:43px; mso-line-height-rule: exactly;">
+                                                                Tu código de acceso único para Disney+
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="center" style="padding: 0px 45px 0px 45px;font-size: 15px; color:#252526; font-family:'Noto Sans Display', Arial, sans-serif;; letter-spacing:normal; line-height: 25px; mso-line-height-rule: exactly;">
+                                                                Es necesario que verifiques la dirección de correo electrónico asociada a tu cuenta de MyDisney con este código de acceso que vencerá en 15&nbsp;minutos.
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="center" style="padding: 25px 45px 25px 45px;font-size: 28px; font-weight:600; color:#252526; font-family:'Noto Sans Display', Arial, sans-serif;; letter-spacing:4px; line-height:38px; mso-line-height-rule: exactly;">
+                                                                111111
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="center" style="padding: 0px 45px 40px 45px;font-size: 15px; color:#252526; font-family:'Noto Sans Display', Arial, sans-serif;; letter-spacing:normal; line-height: 25px; mso-line-height-rule: exactly;">
+                                                                Si no lo solicitaste, en el <a href="https://us-east-1.mail2.disneyplus.com/CL0/https:%2F%2Fsupport.disney.com%2Fhc%2Fen-us%2Farticles%2F22907439345556/1/FAKE_SES_MSGID/_qeYz31ZWZY-H_kiFL6lPxycW9RJ8SDjojy0UHjrL7Q=451" alias="help_center" style="text-decoration:none;color:#3300ff;">Centro de ayuda</a> hay más&nbsp;información.
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            
+                                        </table>
+                                    </td>
+                                </tr>
+                                
+                                <!-- END Main_Body_Module -->
+                                <!-- START Educational_Body_Module -->
+                                
+                                
+                                <tr>
+                                    <td align="center">
+                                        <table class="module_1" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#ffffff"  style="border: 2px solid #ffffff; border-radius: 12px;">
+                                           
+                                            <tr>
+                                                <td>
+                                                    <table class="module" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#ffffff" style="border: 2px solid #ffffff; border-radius: 12px;">
+                                                        <tr>
+                                                            <td align="left" style="padding: 40px 45px 12px 45px;">
+                                                                <img src="https://prod-ripcut-delivery.disney-plus.net/v1/variant/disney/340F1C79ECC98699141D07CE55818027567972C68C0C62DB05F18B34FE74F31F" alt="MyDisney" style="display: block;height: auto;" width="107" border="0">
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="left" style="padding: 0px 45px 12px 45px; font-size: 22px; font-weight: 600; color:#252526; font-family:'Noto Sans Display', Arial, sans-serif;; letter-spacing:normal; line-height: 27px; mso-line-height-rule: exactly;">
+                                                                Más comodidad. Más diversión.
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="left" style="padding: 0px 45px 12px 45px; font-size: 15px; color:#252526; font-family:'Noto Sans Display', Arial, sans-serif;; letter-spacing:normal; line-height: 25px; mso-line-height-rule: exactly;">
+                                                                MyDisney te permite iniciar sesión fácilmente en los servicios y experiencias de la Familia de Compañías Walt Disney, como Disney+, ESPN, Walt Disney World <a href="https://us-east-1.mail2.disneyplus.com/CL0/https:%2F%2Fmy.disney.com/2/FAKE_SES_MSGID/RPFaYbAOiPvwDkj30FqCtyGabObZkIkJJpIpEhG30F0=451" alias="my_disney" style="text-decoration:none;color:#3300ff;">y muchos&nbsp;más</a>.
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td align="left" style="padding: 0px 45px 40px 45px;">
+                                                                <img src="https://prod-ripcut-delivery.disney-plus.net/v1/variant/disney/89EA88E6026C0BBA0148351B0B49913E8E55D71087346B3DC7DF24153B06E8D5" alt="Brands" style="display: block;height: auto;" width="285" border="0">
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                           
+                                        </table>
+                                    </td>
+                                </tr>
+                                
+                                <!-- END Educational_Body_Module -->
+                                <!-- ====== END Body Modules ======== -->
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center">
+                            <table class="module" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#F1F2F4">
+                                <tr>
+                    <td>  
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+  <tr>
+    <td style="padding: 10px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="font-size: 14px; font-family: 'Noto Sans Display', Arial, sans-serif;; line-height: 24px;mso-line-height-rule:exactly; color: #252526;" align="left">
+    No respondas este mensaje. Esta dirección no acepta correos electrónicos, por lo que no recibirás una respuesta. Como parte de nuestro servicio, enviamos este correo con información esencial sobre tu cuenta de Disney+, tu reciente compra, reserva o suscripción a uno de nuestros servicios. En Disney, respetamos y protegemos tu privacidad de acuerdo con nuestra 
+
+
+
+  
+  
+  
+
+
+
+<a href="https://us-east-1.mail2.disneyplus.com/CL0/https:%2F%2Fwww.disneyplus.com%2Flegal%2Fprivacy-policy/1/FAKE_SES_MSGID/cRDPYsaeHuRSOT_QNX96MPsze9FlMVpTQgV36uenc38=451" alias="privacy_policy" style="text-decoration:underline;color:#252526;">
+Política de privacidad</a>. Si tienes preguntas, visita el Centro de ayuda.<br><br>Este correo electrónico sobre nuestro servicio fue enviado por Disney Streaming Services LLC, <a href="#" style="text-decoration:none;color: #252526; cursor:text;">500 S Buena Vista St., Burbank, CA 91521 en nombre de TFCF International Channels Chile Limitada, con domicilio social en Avenida Vitacura #2736, Oficina 2001, Piso 20, Las Condes, Santiago de Chile</a>. CP 7550597.<br><br>
+
+
+
+  
+  
+  
+
+
+
+<a href="https://us-east-1.mail2.disneyplus.com/CL0/https:%2F%2Fwww.disneyplus.com%2Flegal%2Fsubscriber-agreement/1/FAKE_SES_MSGID/XcKaWH3XM43GTMknnQCMIOihzlIU16QuMqK-JLJ3dCo=451" alias="subscriber_agreement" style="text-decoration:underline;color:#252526;">
+Acuerdo de suscripción</a> – 
+
+
+
+  
+  
+  
+
+
+
+<a href="https://us-east-1.mail2.disneyplus.com/CL0/https:%2F%2Fwww.disneyplus.com%2Flegal%2Fprivacy-policy/2/FAKE_SES_MSGID/Ynsz63VaIyvgyaiZ2hZcHVHMq7ejYDo_I-V3mfHOO_4=451" alias="privacy_policy" style="text-decoration:underline;color:#252526;">
+Política de privacidad</a><br><br>&copy; 2026 Disney y sus entidades relacionadas. Todos los derechos reservados.<br><br>
+
+<br><br>SRC: 60f0f_CL_ES-419
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+  </td>
+                  </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <custom name="opencounter" type="tracking" />
+<img alt="" src="http://us-east-1.mail2.disneyplus.com/CI0/FAKE_SES_MSGID/BWpM-cEJBWsV2iEoL7t9n8ennNF6OTnBNHPPX3cMjnA=451" style="display: none; width: 1px; height: 1px;">
+</body>
+
+</html>
+
+------=_FixtureBoundary_3c6469736e65792d--
