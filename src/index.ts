@@ -54,9 +54,15 @@ const CSP_HEADER =
  */
 export function verifyForwarder(
   envelopeFrom: string | null,
-  trustedForwarder: string,
+  trustedForwarder: string | undefined,
 ): boolean {
   if (!envelopeFrom) return false;
+  // Env.TRUSTED_FORWARDER is `string | undefined` because a Worker
+  // deployed without the secret ever being set has env.TRUSTED_FORWARDER
+  // literally `undefined` at runtime. Guard before normalizeAddress so
+  // an unset secret fails closed (return false) rather than crashing on
+  // `undefined.trim()`.
+  if (!trustedForwarder) return false;
 
   const normalizedTrusted = normalizeAddress(trustedForwarder);
   if (!normalizedTrusted) return false;
@@ -70,23 +76,37 @@ export function verifyForwarder(
 /**
  * Lowercase, trim surrounding whitespace, strip a single layer of
  * angle brackets, and — for gmail.com / googlemail.com addresses —
- * remove dots from the local-part. Used for envelope-from values
- * (sometimes `<a@b>`) and the configured TRUSTED_FORWARDER value.
+ * remove dots from the local-part AND canonicalize the domain to
+ * gmail.com. Used for envelope-from values (sometimes `<a@b>`) and the
+ * configured TRUSTED_FORWARDER value.
  *
  * Gmail dot normalization: Google treats `foo.bar@gmail.com` and
  * `foobar@gmail.com` as the same mailbox. The owner's envelope-from
  * alternates between canonical forms (e.g. with vs. without dots), so
  * stripping dots on both sides before comparison makes the check
  * correct for any variant of a Gmail address.
+ *
+ * gmail.com / googlemail.com aliasing: Google owns both domains and
+ * routes them to the same mailbox. Outbound envelope-from occasionally
+ * stamps the googlemail.com form (e.g. historical UK accounts, or
+ * client-side SMTP that hasn't been migrated), which would cause a
+ * literal-domain mismatch against a TRUSTED_FORWARDER configured at
+ * @gmail.com. Canonicalizing both to gmail.com before compare makes
+ * the check alias-aware.
  */
-function normalizeAddress(value: string): string {
+function normalizeAddress(value: string | null | undefined): string {
+  // Accept null/undefined — Worker secrets that were never set arrive
+  // as undefined at runtime despite the `string` type annotation, and
+  // both the verification path and the diagnostic skip log feed this
+  // helper the raw env value.
+  if (!value) return '';
   const bare = value.trim().replace(/^<|>$/g, '').trim().toLowerCase();
   const atIdx = bare.lastIndexOf('@');
   if (atIdx === -1) return bare;
   const local = bare.slice(0, atIdx);
   const domain = bare.slice(atIdx + 1);
   if (domain === 'gmail.com' || domain === 'googlemail.com') {
-    return `${local.replace(/\./g, '')}@${domain}`;
+    return `${local.replace(/\./g, '')}@gmail.com`;
   }
   return bare;
 }
@@ -110,11 +130,17 @@ export default {
       // Worker is built to relay and the one thing we always redact.
       const names: string[] = [];
       for (const name of message.headers.keys()) names.push(name);
+      // `?? 'UNSET'` sentinel so the unset-secret case renders as
+      // `configured-forwarder="UNSET"` (quoted, readable) rather than
+      // `configured-forwarder=undefined` (JSON.stringify(undefined)
+      // returns the JS value `undefined`, which template-literal-
+      // interpolates to the bare token). During incident triage, the
+      // quoted sentinel makes the unset-secret state unambiguous.
       console.log(
         `skip: forwarder verification failed` +
           ` envelope-from=${JSON.stringify(message.from)}` +
           ` envelope-to=${JSON.stringify(message.to)}` +
-          ` configured-forwarder=${JSON.stringify(env.TRUSTED_FORWARDER)}` +
+          ` configured-forwarder=${JSON.stringify(env.TRUSTED_FORWARDER ?? 'UNSET')}` +
           ` normalized-from=${JSON.stringify(normalizeAddress(message.from))}` +
           ` normalized-configured=${JSON.stringify(normalizeAddress(env.TRUSTED_FORWARDER))}` +
           ` matched=false` +
@@ -142,9 +168,14 @@ export default {
       // etc.) is immediately diagnosable. Short text bodies fit; HTML
       // bodies get truncated which is fine for triage.
       const body = (normalized.text || normalized.html).slice(0, 400);
+      // All three fields JSON.stringify'd so a crafted From/Subject
+      // containing whitespace or newlines can't fragment the structured
+      // log line, matching the style of the forwarder-verification-
+      // failed log above.
       console.log(
         `skip: no pattern matched` +
-          ` from=${normalized.from} subject=${JSON.stringify(normalized.subject)}` +
+          ` from=${JSON.stringify(normalized.from)}` +
+          ` subject=${JSON.stringify(normalized.subject)}` +
           ` body=${JSON.stringify(body)}`,
       );
       return;

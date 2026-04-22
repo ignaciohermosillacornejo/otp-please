@@ -9,5 +9,10 @@ export interface Env {
   TIMEZONE: string;
   DASHBOARD_TITLE: string;
   FOOTER_TEXT: string;
-  TRUSTED_FORWARDER: string;
+  // `string | undefined`, not `string`, because Worker secrets that
+  // were never `wrangler secret put`'d arrive as literal `undefined`
+  // at runtime. Modeling it honestly pushes the guard requirement up
+  // to every call site that the compiler can see, rather than relying
+  // on a comment inside verifyForwarder.
+  TRUSTED_FORWARDER: string | undefined;
 }

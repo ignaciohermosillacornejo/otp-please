@@ -318,6 +318,11 @@ describe('renderDashboard — household entries', () => {
       'href="https://www.netflix.com/account/travel/OPAQUE-TOKEN"',
     );
     expect(html).toContain('target="_blank"');
+    // The CTA text is derived from meta.name, not a hardcoded literal.
+    // Assert on the Netflix form for this fixture; the underlying
+    // renderer is parameterized (same templated substring appears in
+    // the inline client-side render path).
+    expect(html).toContain('>Approve on Netflix<');
     // noopener prevents window.opener access; noreferrer additionally
     // suppresses the Referer header so the target doesn't see the
     // Access-gated dashboard URL.

@@ -266,11 +266,13 @@ function tryMatch(
     if (pattern.codeRegex) {
       const match = body.match(pattern.codeRegex);
       if (match) {
-        const value = match[1] ?? match[0];
+        // codeOf() always emits exactly one capture group, so match[1]
+        // is defined whenever the regex matched. linkRegex (below)
+        // intentionally has no capture group and so needs match[0].
         return {
           service: pattern.service,
           type: 'code',
-          value,
+          value: match[1],
           validForMinutes: pattern.validForMinutes,
         };
       }
@@ -280,11 +282,15 @@ function tryMatch(
     if (pattern.linkRegex) {
       const match = body.match(pattern.linkRegex);
       if (match) {
-        const value = match[1] ?? match[0];
+        // linkRegex patterns have no capture group by design (see the
+        // netflix-household comment in PATTERNS), so match[0] — the
+        // full matched URL — is what we want. Symmetric with the
+        // codeRegex branch above, just inverted: codeRegex always has
+        // exactly one group, linkRegex always has none.
         return {
           service: pattern.service,
           type: 'household',
-          value,
+          value: match[0],
           validForMinutes: pattern.validForMinutes,
         };
       }

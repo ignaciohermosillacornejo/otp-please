@@ -155,6 +155,16 @@ describe('verifyForwarder', () => {
     expect(
       verifyForwarder('foo.bar@googlemail.com', 'foobar@googlemail.com'),
     ).toBe(true);
+    // Google treats gmail.com and googlemail.com as aliases of the
+    // same mailbox — an envelope stamped at @googlemail.com must
+    // compare equal to a TRUSTED_FORWARDER configured at @gmail.com,
+    // and vice versa.
+    expect(
+      verifyForwarder('foo.bar@googlemail.com', 'foobar@gmail.com'),
+    ).toBe(true);
+    expect(
+      verifyForwarder('foobar@gmail.com', 'fo.o.bar@googlemail.com'),
+    ).toBe(true);
     // Non-Gmail domains are NOT dot-normalized; the comparison stays
     // literal for providers that treat dots as significant.
     expect(verifyForwarder('fo.o@example.com', 'foo@example.com')).toBe(false);
@@ -165,6 +175,15 @@ describe('verifyForwarder', () => {
     // match against an empty/missing envelope-from.
     expect(verifyForwarder('owner@example.com', '')).toBe(false);
     expect(verifyForwarder('owner@example.com', '   ')).toBe(false);
+  });
+
+  it('returns false when TRUSTED_FORWARDER is undefined (secret unset at runtime)', () => {
+    // Env.TRUSTED_FORWARDER is typed `string | undefined` because a
+    // Worker deployed without the secret ever being set has
+    // env.TRUSTED_FORWARDER literally undefined at runtime. The
+    // verifyForwarder guard must fail closed here instead of crashing
+    // on `undefined.trim()` inside normalizeAddress.
+    expect(verifyForwarder('owner@example.com', undefined)).toBe(false);
   });
 });
 
@@ -215,6 +234,10 @@ describe('email() handler', () => {
     // low-traffic private Worker, aggressive logs are fine — only
     // OTP VALUES and household URL tokens are redacted).
     const skip = logs.find((l) => l.startsWith('skip: forwarder verification failed'));
+    // Guard: .find returns undefined when no log line matches, which
+    // would produce a cryptic TypeError on the .toContain calls below
+    // rather than a clean "expected defined" assertion failure.
+    expect(skip).toBeDefined();
     // Envelope fields are JSON.stringify'd in the log to prevent a
     // malformed SMTP envelope (containing whitespace or newlines) from
     // fragmenting the structured log line.
@@ -234,10 +257,31 @@ describe('email() handler', () => {
       headers: {},
       from: 'owner@example.com',
     });
+    const logs: string[] = [];
+    vi.mocked(console.log).mockImplementation((msg: string) => {
+      logs.push(msg);
+    });
 
     await worker.email!(message, env, fakeCtx());
 
     expect(kv.puts).toHaveLength(0);
+    // The no-pattern-match path logs a verbose diagnostic line with
+    // from, subject, and a 400-char body prefix so template drift is
+    // diagnosable. Lock the shape down so the fields aren't silently
+    // dropped if the log line is refactored.
+    const skip = logs.find((l) => l.startsWith('skip: no pattern matched'));
+    expect(skip).toBeDefined();
+    // All three fields are JSON.stringify'd to prevent whitespace or
+    // newlines in a crafted From/Subject from fragmenting the log line.
+    expect(skip).toContain('from="newsletter@example.org"');
+    expect(skip).toContain('subject=');
+    expect(skip).toContain('body=');
+    // Defense against redaction regressions: the `match.value` redaction
+    // discipline lives in the OTP and household-token paths, not here,
+    // but any 4/6-digit digit run in the newsletter body should still
+    // surface — otherwise our truncation or regex would have corrupted
+    // the diagnostic.
+    expect(skip).toContain('524312');
   });
 
   it('swallows and logs KV failures rather than propagating an unhandled rejection', async () => {

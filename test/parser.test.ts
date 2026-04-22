@@ -436,7 +436,7 @@ describe('matchEmail — manually forwarded emails (Gmail Forward button)', () =
 });
 
 describe('matchEmail — defensive branches', () => {
-  it('uses match[0] when the subject is missing entirely (undefined)', () => {
+  it('handles a missing subject field gracefully (parsed.subject ?? "" fallback)', () => {
     // Covers the `parsed.subject ?? ''` fallback branch where subject is
     // not provided. The ParsedEmail type requires `subject`, but in
     // practice a postal-mime Email can have subject undefined; we cast
