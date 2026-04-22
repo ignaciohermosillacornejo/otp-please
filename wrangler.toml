@@ -17,6 +17,13 @@ routes = [
 binding = "OTP_STORE"
 id = "b46c24c9e4754cffb58be2b94a36dce8"
 
+# Enable Workers observability so every email() and fetch() invocation
+# is queryable via the Cloudflare Observability API (and the dashboard's
+# Logs tab) without needing an active `wrangler tail` session. Retains
+# the default sample rate of 1.0 (keep everything).
+[observability]
+enabled = true
+
 [vars]
 TIMEZONE = "America/Santiago"
 DASHBOARD_TITLE = "Streaming Codes"

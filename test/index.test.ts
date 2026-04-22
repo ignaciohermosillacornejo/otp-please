@@ -182,6 +182,32 @@ describe('verifyForwarder', () => {
     expect(verifyForwarder(header, 'owner@Example.COM')).toBe(true);
   });
 
+  it('treats Gmail addresses with different dot placements as the same mailbox', () => {
+    // Google ignores dots in the gmail.com local-part. Outbound SPF
+    // stamps smtp.mailfrom with whichever canonical form the account
+    // uses, which may differ from the form the deployer put in
+    // TRUSTED_FORWARDER. Both sides get dot-stripped before compare.
+    const withDots =
+      'mx.cloudflare.com; spf=pass smtp.mailfrom=fo.o.bar@gmail.com';
+    const withoutDots = 'foobar@gmail.com';
+    expect(verifyForwarder(withDots, withoutDots)).toBe(true);
+    // And the reverse — TRUSTED_FORWARDER with dots, header without.
+    const headerNoDots =
+      'mx.cloudflare.com; spf=pass smtp.mailfrom=foobar@gmail.com';
+    const trustedWithDots = 'fo.o.bar@gmail.com';
+    expect(verifyForwarder(headerNoDots, trustedWithDots)).toBe(true);
+    // Googlemail.com is the same Google mailbox as gmail.com (Google
+    // owns both); same dot-insensitivity applies.
+    const googlemailHeader =
+      'mx.cloudflare.com; spf=pass smtp.mailfrom=foo.bar@googlemail.com';
+    expect(verifyForwarder(googlemailHeader, 'foobar@googlemail.com')).toBe(true);
+    // Non-Gmail domains are NOT dot-normalized; the comparison stays
+    // literal for providers that treat dots as significant.
+    const nonGmail =
+      'mx.cloudflare.com; spf=pass smtp.mailfrom=fo.o@example.com';
+    expect(verifyForwarder(nonGmail, 'foo@example.com')).toBe(false);
+  });
+
   it('handles a realistic Gmail header whose SPF-result comment contains a comma', () => {
     // Real-world Gmail-forwarded Authentication-Results headers often
     // embed a comma inside the SPF parenthetical comment, e.g.

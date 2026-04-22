@@ -184,16 +184,80 @@ function selectBody(parsed: ParsedEmail): string {
 }
 
 /**
+ * Extract the sender address from a Gmail-style forwarded-message
+ * block in the body. Gmail's "Forward" button produces a quoted
+ * block like:
+ *
+ *   ---------- Forwarded message ---------
+ *   From: Netflix <info@account.netflix.com>
+ *   Date: ...
+ *   Subject: ...
+ *   To: <original recipient>
+ *
+ * When a family member clicks Forward and sends an OTP email to the
+ * Worker, the outer RFC 822 `From:` becomes *their* Gmail (not the
+ * streaming service). The original sender only survives inside the
+ * quoted header block, which is what this helper pulls out so
+ * matchEmail can still run the real sender through senderMatch.
+ *
+ * Trust model: by the time matchEmail runs, verifyForwarder has
+ * already confirmed the envelope came from the configured
+ * TRUSTED_FORWARDER (the deployer's Gmail). The body is therefore
+ * authored by the trusted forwarder and it's safe to extract the
+ * inner From. A non-trusted sender wouldn't pass the envelope check
+ * in the first place.
+ *
+ * Localization: Gmail localizes the separator — English uses
+ * "Forwarded message", Spanish uses "Mensaje reenviado". Both are
+ * recognized. Returns null if no forwarded block is found.
+ */
+function extractForwardedFrom(body: string): string | null {
+  const fwdMatch = body.match(/-+\s*(?:Forwarded message|Mensaje reenviado)\s*-+/i);
+  if (!fwdMatch || fwdMatch.index === undefined) return null;
+  // Look for "From:" (English Gmail) or "De:" (Spanish Gmail) within
+  // 500 chars after the marker. Gmail localizes the header key per
+  // the account's UI language, so supporting both keeps us aligned
+  // with the localized "Forwarded message" / "Mensaje reenviado"
+  // marker variants above.
+  const tail = body.slice(fwdMatch.index, fwdMatch.index + 500);
+  const fromMatch = tail.match(
+    /^(?:From|De):\s*(?:[^<\n]*?<)?([^<>\s\n,]+@[^<>\s\n,]+)/im,
+  );
+  return fromMatch ? normalizeFrom(fromMatch[1]) : null;
+}
+
+/**
  * Main dispatcher. Iterates PATTERNS in order and returns the first pattern
  * that both addresses-matches and successfully extracts a code or link. If a
  * pattern matches by sender but fails to extract, iteration continues so the
  * caller can fall through to a later pattern covering the same sender.
+ *
+ * Manual-forward support: if the outer `from` doesn't match any
+ * pattern, try again using the inner `From:` pulled from a Gmail-
+ * style forwarded-message block in the body. This lets a family
+ * member hit Gmail's Forward button on an OTP and still have the
+ * Worker recognize it.
  */
 export function matchEmail(parsed: ParsedEmail): MatchResult | null {
-  const from = normalizeFrom(parsed.from);
+  const outerFrom = normalizeFrom(parsed.from);
   const subject = parsed.subject ?? '';
   const body = selectBody(parsed);
 
+  const primary = tryMatch(outerFrom, subject, body);
+  if (primary) return primary;
+
+  const innerFrom = extractForwardedFrom(body);
+  if (innerFrom && innerFrom !== outerFrom) {
+    return tryMatch(innerFrom, subject, body);
+  }
+  return null;
+}
+
+function tryMatch(
+  from: string,
+  subject: string,
+  body: string,
+): MatchResult | null {
   for (const pattern of PATTERNS) {
     if (!pattern.senderMatch.test(from)) continue;
     if (pattern.subjectBlocklist && pattern.subjectBlocklist.test(subject)) continue;
