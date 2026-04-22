@@ -13,7 +13,11 @@ import { filterStaleEntries } from '../src/kv';
 import type { ServiceKey } from '../src/parser';
 import type { StoredEntry } from '../src/kv';
 
-const NOW = new Date('2026-04-22T14:30:00Z');
+// Anchor to real wall-clock time so the server-rendered text agrees
+// with the in-browser tick() for ~seconds after load — otherwise the
+// "valid for 15m 00s" text gets overwritten by whatever the browser
+// computes against a frozen ISO baseline, showing nonsense like "448m".
+const NOW = new Date();
 const at = (sec: number) => new Date(NOW.getTime() + sec * 1000).toISOString();
 
 type EntryMap = Record<ServiceKey, StoredEntry | null>;
@@ -59,74 +63,80 @@ interface State {
   footerText?: string;
 }
 
+// "valid for" times are kept at round minute values (no 3m42s oddities)
+// so each bezel reads as one clean snapshot of the state, not a frozen
+// moment from some larger timeline.
+const MIN = 60;
+const HR = 60 * MIN;
+
 const STATES: State[] = [
   {
-    key: 'all-fresh',
-    label: 'all three fresh — rings full',
+    key: 'hero',
+    label: 'netflix 20m · disney expired 5m ago · max 22m',
     entries: {
-      'netflix-household': household(-60, 14 * 60),
-      disney: code('disney', '284193', -30, 13 * 60 + 42),
-      max: code('max', '619027', -90, 12 * 60 + 5),
+      'netflix-household': household(-2 * MIN, 20 * MIN),
+      disney: code('disney', '284193', -20 * MIN, -5 * MIN),
+      max: code('max', '619027', -3 * MIN, 22 * MIN),
+    },
+  },
+  {
+    key: 'all-fresh',
+    label: 'all three fresh — 15m remaining',
+    entries: {
+      'netflix-household': household(-1 * MIN, 15 * MIN),
+      disney: code('disney', '284193', -1 * MIN, 15 * MIN),
+      max: code('max', '619027', -1 * MIN, 15 * MIN),
     },
   },
   {
     key: 'code-dwindling',
-    label: 'disney at ~4m left — ring draining',
+    label: 'disney at 5m left',
     entries: {
       ...empty(),
-      disney: code('disney', '284193', -11 * 60, 4 * 60 + 12),
+      disney: code('disney', '284193', -10 * MIN, 5 * MIN),
     },
   },
   {
     key: 'about-to-expire',
-    label: 'max at 45s — countdown in seconds, ring nearly empty',
+    label: 'max at 45s — countdown in seconds',
     entries: {
       ...empty(),
-      max: code('max', '619027', -14 * 60 - 15, 45),
+      max: code('max', '619027', -14 * MIN - 15, 45),
     },
   },
   {
     key: 'just-expired',
-    label: 'disney expired 1m ago — ring gone, red timer',
+    label: 'disney expired 1m ago — red timer',
     entries: {
       ...empty(),
-      disney: code('disney', '284193', -16 * 60, -60),
+      disney: code('disney', '284193', -16 * MIN, -1 * MIN),
     },
   },
   {
     key: 'deep-in-grace',
-    label: 'disney expired 45m ago — still shown, still within grace',
+    label: 'disney expired 45m ago — still within grace',
     entries: {
       ...empty(),
-      disney: code('disney', '284193', -60 * 60, -45 * 60),
+      disney: code('disney', '284193', -60 * MIN, -45 * MIN),
     },
   },
   {
     key: 'past-grace',
-    label: 'disney expired 2h ago — filtered out, card empty',
+    label: 'disney expired 2h ago — filtered out',
     entries: {
       ...empty(),
       // KV still has it; filterStaleEntries below drops it and the
       // dashboard renders the empty state. This is the "no sense
       // showing expired 600m ago" scenario.
-      disney: code('disney', '284193', -3 * 60 * 60, -2 * 60 * 60),
+      disney: code('disney', '284193', -3 * HR, -2 * HR),
     },
   },
   {
     key: 'household-solo',
-    label: 'netflix household alone — approval link, no codes',
+    label: 'netflix household alone — 15m to approve',
     entries: {
       ...empty(),
-      'netflix-household': household(-120, 11 * 60 + 18),
-    },
-  },
-  {
-    key: 'mixed-lifecycle',
-    label: 'fresh + dwindling + expired — one of each',
-    entries: {
-      'netflix-household': household(-60, 13 * 60),
-      disney: code('disney', '284193', -12 * 60, 2 * 60 + 40),
-      max: code('max', '619027', -16 * 60, -50),
+      'netflix-household': household(-2 * MIN, 15 * MIN),
     },
   },
   {
