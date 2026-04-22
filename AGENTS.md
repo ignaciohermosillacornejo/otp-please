@@ -45,6 +45,8 @@ If you're standing the whole thing up in a clean Cloudflare account:
 3. **Set the `TRUSTED_FORWARDER` secret** — `npx wrangler secret put
    TRUSTED_FORWARDER`, value = the owner's Gmail address. This is the
    single load-bearing secret; no other `wrangler secret put` is needed.
+   Order-wise this step and the deploy are swappable — the secret just
+   has to exist before the first forwarded mail arrives.
 4. **Deploy** — `npx wrangler deploy`. Note the `Current Version ID` it
    prints; you'll correlate smoke-test logs to this id.
 5. **Email Routing** (Cloudflare dashboard or `cloudflare-api` MCP):
@@ -92,6 +94,11 @@ npm ci
 npm test            # vitest, ~300ms
 npm run typecheck   # checks both tsconfig.json and tsconfig.test.json
 ```
+
+For local dev, copy `.dev.vars.example` → `.dev.vars` and set
+`TRUSTED_FORWARDER` before running `wrangler dev`. Without it every
+inbound mail is rejected with `skip: forwarder verification failed`,
+because Worker secrets aren't exposed to `wrangler dev`.
 
 Unit tests drive `ForwardableEmailMessage` test doubles — `wrangler dev`
 cannot exercise the email handler, so tests are the fast-feedback loop.
