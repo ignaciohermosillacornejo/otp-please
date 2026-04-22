@@ -261,7 +261,7 @@ function renderHouseholdCard(
     `  <a href="${escapeHtml(safeHref(entry.url))}" target="_blank" rel="noopener noreferrer"`,
     `     class="mt-1 flex items-center justify-between gap-2 rounded-[10px] px-4 py-2.5 font-medium text-[14px] text-stone-950 active:opacity-90 transition"`,
     `     style="background:${meta.accent}">`,
-    `    <span>Approve on Netflix</span>`,
+    `    <span>Approve on ${escapeHtml(meta.name)}</span>`,
     `    ${EXTERNAL_LINK_SVG}`,
     `  </a>`,
     `  <div class="flex items-center justify-between pt-0.5">`,
@@ -349,17 +349,25 @@ function copy(el) {
   const code = el.dataset.code;
   if (!code) return;
   const hint = el.querySelector('[data-copy-hint]');
-  const done = () => {
+  const flash = (html, ms) => {
     if (!hint) return;
     hint.dataset.flash = '1';
-    hint.innerHTML = '<span class="text-[11px] font-medium uppercase tracking-[0.12em]" style="color:oklch(0.78 0.14 150)">Copied</span>';
+    hint.innerHTML = html;
     setTimeout(() => {
       hint.dataset.flash = '0';
       hint.innerHTML = COPY_ICON_SVG;
-    }, 1400);
+    }, ms);
   };
+  const done = () => flash('<span class="text-[11px] font-medium uppercase tracking-[0.12em]" style="color:oklch(0.78 0.14 150)">Copied</span>', 1400);
+  // Red pill mirroring the "Copied" green one so a clipboard rejection
+  // (permission denied, insecure context, fenced frame, etc.) is
+  // actually visible — silently swallowing the rejection left the
+  // button looking idle and the user thinking the copy succeeded.
+  const failed = () => flash('<span class="text-[11px] font-medium uppercase tracking-[0.12em]" style="color:oklch(0.72 0.14 28)">Tap &amp; hold</span>', 1800);
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(code).then(done).catch(() => {});
+    navigator.clipboard.writeText(code).then(done).catch(failed);
+  } else {
+    failed();
   }
 }
 function tick() {
@@ -459,7 +467,7 @@ function renderCardHTML(service, entry) {
     '</div>' +
     '<p class="text-stone-300 text-[14px] leading-snug">Someone wants to watch from a new place.</p>' +
     '<a href="' + escapeAttr(safeHref(entry.url)) + '" target="_blank" rel="noopener noreferrer" class="mt-1 flex items-center justify-between gap-2 rounded-[10px] px-4 py-2.5 font-medium text-[14px] text-stone-950 active:opacity-90 transition" style="background:' + meta.accent + '">' +
-      '<span>Approve on Netflix</span>' + EXTERNAL_LINK_SVG +
+      '<span>Approve on ' + escapeAttr(meta.name) + '</span>' + EXTERNAL_LINK_SVG +
     '</a>' +
     '<div class="flex items-center justify-between pt-0.5">' +
       receivedSpan(entry.received_at, now) +

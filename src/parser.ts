@@ -266,11 +266,13 @@ function tryMatch(
     if (pattern.codeRegex) {
       const match = body.match(pattern.codeRegex);
       if (match) {
-        const value = match[1] ?? match[0];
+        // codeOf() always emits exactly one capture group, so match[1]
+        // is defined whenever the regex matched. linkRegex (below)
+        // intentionally has no capture group and so needs match[0].
         return {
           service: pattern.service,
           type: 'code',
-          value,
+          value: match[1],
           validForMinutes: pattern.validForMinutes,
         };
       }

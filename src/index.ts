@@ -57,6 +57,12 @@ export function verifyForwarder(
   trustedForwarder: string,
 ): boolean {
   if (!envelopeFrom) return false;
+  // The Env type declares TRUSTED_FORWARDER: string, but a Worker
+  // deployed without the secret ever being set has env.TRUSTED_FORWARDER
+  // literally `undefined` at runtime. Guard before normalizeAddress so
+  // an unset secret fails closed (return false) rather than crashing on
+  // `undefined.trim()`.
+  if (!trustedForwarder) return false;
 
   const normalizedTrusted = normalizeAddress(trustedForwarder);
   if (!normalizedTrusted) return false;
@@ -70,23 +76,37 @@ export function verifyForwarder(
 /**
  * Lowercase, trim surrounding whitespace, strip a single layer of
  * angle brackets, and — for gmail.com / googlemail.com addresses —
- * remove dots from the local-part. Used for envelope-from values
- * (sometimes `<a@b>`) and the configured TRUSTED_FORWARDER value.
+ * remove dots from the local-part AND canonicalize the domain to
+ * gmail.com. Used for envelope-from values (sometimes `<a@b>`) and the
+ * configured TRUSTED_FORWARDER value.
  *
  * Gmail dot normalization: Google treats `foo.bar@gmail.com` and
  * `foobar@gmail.com` as the same mailbox. The owner's envelope-from
  * alternates between canonical forms (e.g. with vs. without dots), so
  * stripping dots on both sides before comparison makes the check
  * correct for any variant of a Gmail address.
+ *
+ * gmail.com / googlemail.com aliasing: Google owns both domains and
+ * routes them to the same mailbox. Outbound envelope-from occasionally
+ * stamps the googlemail.com form (e.g. historical UK accounts, or
+ * client-side SMTP that hasn't been migrated), which would cause a
+ * literal-domain mismatch against a TRUSTED_FORWARDER configured at
+ * @gmail.com. Canonicalizing both to gmail.com before compare makes
+ * the check alias-aware.
  */
-function normalizeAddress(value: string): string {
+function normalizeAddress(value: string | null | undefined): string {
+  // Accept null/undefined — Worker secrets that were never set arrive
+  // as undefined at runtime despite the `string` type annotation, and
+  // both the verification path and the diagnostic skip log feed this
+  // helper the raw env value.
+  if (!value) return '';
   const bare = value.trim().replace(/^<|>$/g, '').trim().toLowerCase();
   const atIdx = bare.lastIndexOf('@');
   if (atIdx === -1) return bare;
   const local = bare.slice(0, atIdx);
   const domain = bare.slice(atIdx + 1);
   if (domain === 'gmail.com' || domain === 'googlemail.com') {
-    return `${local.replace(/\./g, '')}@${domain}`;
+    return `${local.replace(/\./g, '')}@gmail.com`;
   }
   return bare;
 }
