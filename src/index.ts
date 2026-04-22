@@ -25,83 +25,59 @@ const CSP_HEADER =
   "connect-src 'self';";
 
 /**
- * Returns true iff an Authentication-Results header proves the mail
- * transited the configured trusted forwarder (i.e., an spf=pass with
- * smtp.mailfrom matching env.TRUSTED_FORWARDER, case-insensitive).
+ * Returns true iff the envelope-from address matches the configured
+ * trusted forwarder after normalization (case-insensitive, Gmail dots
+ * ignored in the local-part).
  *
  * Threat model: the Worker is exposed at a public Email Routing address,
- * so any sender can reach us. We trust a message ONLY if the receiving
- * MTA (Cloudflare) attests that SPF passed for an envelope-sender
- * (smtp.mailfrom) we own — i.e., the owner's Gmail forwarding path.
- * `smtp.helo` is intentionally NOT accepted on its own: helo is a
- * self-declared hostname and not authenticated by SPF the same way
- * mailfrom is, so a matching helo without a matching mailfrom could be
- * spoofed by any host that claims the hostname.
+ * so any sender can reach us. Trust derives from Cloudflare's receiving
+ * MTA, which has already performed SPF/DKIM/DMARC/ARC checks at ingest
+ * (visible in the Email Routing Activity tab as
+ * `spf=pass dkim=pass arc=pass Spam=Safe`). Cloudflare would not have
+ * delivered the message to this Worker if SPF against the envelope-from
+ * had failed, so a `message.from` we see here is an envelope address
+ * Cloudflare has already authenticated.
  *
- * Underlying assumption (RFC 8601 §5): the Authentication-Results
- * header we read was produced by Cloudflare's receiving MTA, not
- * carried over from the sender. Per RFC 8601 §5.3, a receiver
- * "SHOULD" strip untrusted Authentication-Results headers before
- * adding its own, and Cloudflare Email Routing does so in practice —
- * otherwise an attacker could simply prepend a forged
- * `Authentication-Results: ...; spf=pass smtp.mailfrom=<owner>` line
- * to their message and bypass this check trivially. If that invariant
- * ever changes, this function is not safe and must be rewritten to
- * select the correct (MTA-authored) stanza.
+ * An earlier iteration of this function parsed an
+ * `Authentication-Results` header out of the inbound message. That
+ * approach was wrong: Cloudflare Email Routing does NOT surface a
+ * fresh Authentication-Results header to Workers. Only the sender's
+ * own `ARC-Authentication-Results` (if any) and Cloudflare's envelope
+ * fields pass through. Real inbound mail was being silently dropped
+ * because the Worker-level header parse always failed. See the
+ * "aggressive skip-path logging" diag work on `main` for the evidence.
  *
- * The header is semi-structured (RFC 8601 / 5451): one or more stanzas
- * joined by `;`, each with `method=result` tokens and ptype.property
- * key/values. Multiple Authentication-Results headers may be merged by
- * `Headers.get` into one comma-separated value; we accept either shape.
+ * If Cloudflare ever starts surfacing its own Authentication-Results
+ * header, we could *additionally* verify it — but the envelope match
+ * alone is the load-bearing check, because CF wouldn't have delivered
+ * otherwise.
  */
 export function verifyForwarder(
-  authResultsHeader: string | null,
+  envelopeFrom: string | null,
   trustedForwarder: string,
 ): boolean {
-  if (!authResultsHeader) return false;
+  if (!envelopeFrom) return false;
 
   const normalizedTrusted = normalizeAddress(trustedForwarder);
   if (!normalizedTrusted) return false;
 
-  // Strip RFC 8601 parenthetical comments before splitting. SPF-result
-  // parentheticals commonly contain commas
-  // (e.g. "spf=pass (google.com: domain of X designates Y as permitted
-  // sender, allow) smtp.mailfrom=..."), and splitting on `,` inside a
-  // comment would fragment a single stanza so neither fragment carries
-  // both spf=pass and smtp.mailfrom — dropping legitimate mail.
-  // Comments are documentation, not semantic, so removing them is safe.
-  const withoutComments = authResultsHeader.replace(/\([^)]*\)/g, '');
+  const normalizedFrom = normalizeAddress(envelopeFrom);
+  if (!normalizedFrom) return false;
 
-  // Split on both `;` (intra-header segmentation) and `,` (multiple
-  // headers merged by Headers.get). Each resulting segment is checked
-  // independently for an spf=pass + matching smtp.mailfrom pair.
-  const segments = withoutComments.split(/[;,]/);
-  for (const segment of segments) {
-    const spfMatch = segment.match(/\bspf=(\w+)/i);
-    if (!spfMatch) continue;
-    if (spfMatch[1].toLowerCase() !== 'pass') continue;
-
-    const mailfromMatch = segment.match(/\bsmtp\.mailfrom=([^\s;()]+)/i);
-    if (!mailfromMatch) continue;
-
-    if (normalizeAddress(mailfromMatch[1]) === normalizedTrusted) return true;
-  }
-
-  return false;
+  return normalizedFrom === normalizedTrusted;
 }
 
 /**
  * Lowercase, trim surrounding whitespace, strip a single layer of
  * angle brackets, and — for gmail.com / googlemail.com addresses —
- * remove dots from the local-part. Used for smtp.mailfrom values
+ * remove dots from the local-part. Used for envelope-from values
  * (sometimes `<a@b>`) and the configured TRUSTED_FORWARDER value.
  *
  * Gmail dot normalization: Google treats `foo.bar@gmail.com` and
- * `foobar@gmail.com` as the same mailbox. Outbound SPF stamps the
- * envelope with whichever canonical form the account uses, which may
- * differ from the form the deployer configured in TRUSTED_FORWARDER.
- * Stripping dots on both sides makes the comparison correct for any
- * variant of a Gmail address.
+ * `foobar@gmail.com` as the same mailbox. The owner's envelope-from
+ * alternates between canonical forms (e.g. with vs. without dots), so
+ * stripping dots on both sides before comparison makes the check
+ * correct for any variant of a Gmail address.
  */
 function normalizeAddress(value: string): string {
   const bare = value.trim().replace(/^<|>$/g, '').trim().toLowerCase();
@@ -121,35 +97,28 @@ export default {
     env: Env,
     _ctx: ExecutionContext,
   ): Promise<void> {
-    const authResults = message.headers.get('Authentication-Results');
-    if (!verifyForwarder(authResults, env.TRUSTED_FORWARDER)) {
+    if (!verifyForwarder(message.from, env.TRUSTED_FORWARDER)) {
       // Verbose by design. This is a low-traffic personal Worker on the
       // owner's CF account, logs are private, and we've been burned by
-      // under-logged skip paths. Dump everything that could explain why
-      // verification failed: every inbound header name, the first 500
-      // chars of both Authentication-Results and ARC-Authentication-
-      // Results (CF Email Routing has been observed forwarding the ARC
-      // variant but not a fresh Authentication-Results), envelope
-      // addresses, and the parsed SPF/mailfrom/configured triple.
+      // under-logged skip paths. Dump the raw + normalized envelope-
+      // from, the raw + normalized configured forwarder, and the
+      // inbound header names (for future diagnostics of any other
+      // drift).
       //
       // Do NOT log extracted OTP values or household URL tokens from
       // here or anywhere else — those are the user-facing secrets the
       // Worker is built to relay and the one thing we always redact.
       const names: string[] = [];
       for (const name of message.headers.keys()) names.push(name);
-      const arcResults = message.headers.get('ARC-Authentication-Results');
-      const stripped = (authResults ?? '').replace(/\([^)]*\)/g, '');
-      const spfResult = stripped.match(/\bspf=(\w+)/i)?.[1] ?? 'absent';
-      const mailfromMatch = stripped.match(/\bsmtp\.mailfrom=([^\s;()]+)/i);
-      const mailfromValue = mailfromMatch ? normalizeAddress(mailfromMatch[1]) : 'absent';
       console.log(
         `skip: forwarder verification failed` +
-          ` envelope-from=${message.from} envelope-to=${message.to}` +
-          ` configured-forwarder=${env.TRUSTED_FORWARDER}` +
-          ` spf=${spfResult} mailfrom=${mailfromValue}` +
-          ` header-names=[${names.join(',')}]` +
-          ` Authentication-Results=${JSON.stringify((authResults ?? '').slice(0, 500))}` +
-          ` ARC-Authentication-Results=${JSON.stringify((arcResults ?? '').slice(0, 500))}`,
+          ` envelope-from=${JSON.stringify(message.from)}` +
+          ` envelope-to=${JSON.stringify(message.to)}` +
+          ` configured-forwarder=${JSON.stringify(env.TRUSTED_FORWARDER)}` +
+          ` normalized-from=${JSON.stringify(normalizeAddress(message.from))}` +
+          ` normalized-configured=${JSON.stringify(normalizeAddress(env.TRUSTED_FORWARDER))}` +
+          ` matched=false` +
+          ` header-names=[${names.join(',')}]`,
       );
       return;
     }

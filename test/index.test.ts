@@ -104,130 +104,67 @@ function fakeCtx(): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
-// Gmail-style Authentication-Results stanza. Matches the shape documented
-// in the task auth memo. We use owner@example.com so the test file is
-// sanitized (matches the TRUSTED_FORWARDER in makeEnv).
-const GMAIL_AUTH_PASS =
-  'mx.cloudflare.com;' +
-  ' dkim=pass header.i=@account.netflix.com header.s=nflx1 header.b=abc;' +
-  ' spf=pass (cloudflare.com: domain of owner@example.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=owner@example.com;' +
-  ' dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=account.netflix.com';
-
 describe('verifyForwarder', () => {
   const trusted = 'owner@example.com';
 
-  it('returns false for a null header', () => {
+  it('returns false for a null envelope-from', () => {
     expect(verifyForwarder(null, trusted)).toBe(false);
   });
 
-  it('returns false for an empty string', () => {
+  it('returns false for an empty-string envelope-from', () => {
     expect(verifyForwarder('', trusted)).toBe(false);
   });
 
-  it('returns true for a typical Gmail-forwarded spf=pass stanza', () => {
-    expect(verifyForwarder(GMAIL_AUTH_PASS, trusted)).toBe(true);
+  it('returns true when envelope-from equals the configured forwarder', () => {
+    expect(verifyForwarder('owner@example.com', trusted)).toBe(true);
   });
 
-  it('returns false when spf=fail even if smtp.mailfrom matches', () => {
-    const header = GMAIL_AUTH_PASS.replace('spf=pass', 'spf=fail');
-    expect(verifyForwarder(header, trusted)).toBe(false);
+  it('rejects a bogus envelope-from even if it looks superficially similar', () => {
+    expect(verifyForwarder('attacker@evil.example', trusted)).toBe(false);
+    expect(verifyForwarder('owner@evil.example', trusted)).toBe(false);
+    expect(verifyForwarder('attacker@example.com', trusted)).toBe(false);
   });
 
-  it('returns false when spf=pass but smtp.mailfrom is a different address', () => {
-    const header = GMAIL_AUTH_PASS.replace(
-      'smtp.mailfrom=owner@example.com',
-      'smtp.mailfrom=attacker@example.com',
-    );
-    expect(verifyForwarder(header, trusted)).toBe(false);
+  it('accepts <angle-bracketed> envelope-from values', () => {
+    expect(verifyForwarder('<owner@example.com>', trusted)).toBe(true);
   });
 
-  it('returns false when spf=pass but smtp.mailfrom is absent (helo-only)', () => {
-    const header =
-      'mx.cloudflare.com; spf=pass (fallback) smtp.helo=mail-sor-f41.example.com';
-    expect(verifyForwarder(header, trusted)).toBe(false);
-  });
-
-  it('returns false when there is no spf= result at all', () => {
-    const header =
-      'mx.cloudflare.com; dkim=pass header.i=@example.com; dmarc=pass header.from=example.com';
-    expect(verifyForwarder(header, trusted)).toBe(false);
-  });
-
-  it('accepts multiple stanzas joined by comma where one matches', () => {
-    const receivingMTA = 'mx.other.net; dkim=none; spf=none';
-    const header = `${receivingMTA}, ${GMAIL_AUTH_PASS}`;
-    expect(verifyForwarder(header, trusted)).toBe(true);
-  });
-
-  it('still matches when stanzas are separated by both ";" and a newline (header folding)', () => {
-    // Regex splits on `;` and `,` only — this passes because the
-    // critical `spf=pass smtp.mailfrom=...` clause is cleanly bounded
-    // by `;` within the second stanza, not because `\n` is a separator.
-    // The test is here to document that newline-folded real-world
-    // headers still work, NOT to claim `\n` is an intentional split point.
-    const receivingMTA = 'mx.other.net; dkim=none; spf=none';
-    const header = `${receivingMTA}\n${GMAIL_AUTH_PASS}`;
-    expect(verifyForwarder(header, trusted)).toBe(true);
-  });
-
-  it('accepts <angle-bracketed> smtp.mailfrom values', () => {
-    const header =
-      'mx.cloudflare.com; spf=pass smtp.mailfrom=<owner@example.com>';
-    expect(verifyForwarder(header, trusted)).toBe(true);
+  it('accepts <angle-bracketed> TRUSTED_FORWARDER values (operator-error tolerance)', () => {
+    // If the secret is misconfigured with angle brackets, normalization
+    // strips them from both sides — so a plain envelope-from still
+    // matches an angle-bracketed configured value.
+    expect(verifyForwarder('owner@example.com', '<owner@example.com>')).toBe(true);
   });
 
   it('matches case-insensitively on both sides', () => {
-    const header =
-      'mx.cloudflare.com; spf=pass smtp.mailfrom=OWNER@example.com';
-    expect(verifyForwarder(header, 'owner@Example.COM')).toBe(true);
+    expect(verifyForwarder('OWNER@example.com', 'owner@Example.COM')).toBe(true);
   });
 
   it('treats Gmail addresses with different dot placements as the same mailbox', () => {
-    // Google ignores dots in the gmail.com local-part. Outbound SPF
-    // stamps smtp.mailfrom with whichever canonical form the account
-    // uses, which may differ from the form the deployer put in
-    // TRUSTED_FORWARDER. Both sides get dot-stripped before compare.
-    const withDots =
-      'mx.cloudflare.com; spf=pass smtp.mailfrom=fo.o.bar@gmail.com';
-    const withoutDots = 'foobar@gmail.com';
-    expect(verifyForwarder(withDots, withoutDots)).toBe(true);
-    // And the reverse — TRUSTED_FORWARDER with dots, header without.
-    const headerNoDots =
-      'mx.cloudflare.com; spf=pass smtp.mailfrom=foobar@gmail.com';
-    const trustedWithDots = 'fo.o.bar@gmail.com';
-    expect(verifyForwarder(headerNoDots, trustedWithDots)).toBe(true);
+    // Google ignores dots in the gmail.com local-part. The owner's
+    // Gmail alternates between `hermosillaignacio@` and
+    // `hermosilla.ignacio@` canonical forms; outbound envelope stamps
+    // whichever the account uses, which may differ from the form the
+    // deployer put in TRUSTED_FORWARDER. Both sides get dot-stripped
+    // before compare.
+    expect(verifyForwarder('fo.o.bar@gmail.com', 'foobar@gmail.com')).toBe(true);
+    // Reverse — TRUSTED_FORWARDER with dots, envelope without.
+    expect(verifyForwarder('foobar@gmail.com', 'fo.o.bar@gmail.com')).toBe(true);
     // Googlemail.com is the same Google mailbox as gmail.com (Google
     // owns both); same dot-insensitivity applies.
-    const googlemailHeader =
-      'mx.cloudflare.com; spf=pass smtp.mailfrom=foo.bar@googlemail.com';
-    expect(verifyForwarder(googlemailHeader, 'foobar@googlemail.com')).toBe(true);
+    expect(
+      verifyForwarder('foo.bar@googlemail.com', 'foobar@googlemail.com'),
+    ).toBe(true);
     // Non-Gmail domains are NOT dot-normalized; the comparison stays
     // literal for providers that treat dots as significant.
-    const nonGmail =
-      'mx.cloudflare.com; spf=pass smtp.mailfrom=fo.o@example.com';
-    expect(verifyForwarder(nonGmail, 'foo@example.com')).toBe(false);
-  });
-
-  it('handles a realistic Gmail header whose SPF-result comment contains a comma', () => {
-    // Real-world Gmail-forwarded Authentication-Results headers often
-    // embed a comma inside the SPF parenthetical comment, e.g.
-    // "spf=pass (google.com: domain of owner@example.com designates
-    // 209.85.220.41 as permitted sender, allow) smtp.mailfrom=...".
-    // The comma inside the comment must NOT fragment the stanza, or
-    // legitimate forwarded mail drops silently.
-    const header =
-      'mx.cloudflare.com; ' +
-      'dkim=pass header.i=@account.netflix.com; ' +
-      'spf=pass (google.com: domain of owner@example.com designates 209.85.220.41 as permitted sender, allow) smtp.mailfrom=owner@example.com; ' +
-      'dmarc=pass header.from=account.netflix.com';
-    expect(verifyForwarder(header, trusted)).toBe(true);
+    expect(verifyForwarder('fo.o@example.com', 'foo@example.com')).toBe(false);
   });
 
   it('returns false when TRUSTED_FORWARDER is empty/whitespace', () => {
     // Defensive: an empty TRUSTED_FORWARDER must NEVER cause a vacuous
-    // match. Blank string must not equal blank mailfrom, etc.
-    expect(verifyForwarder(GMAIL_AUTH_PASS, '')).toBe(false);
-    expect(verifyForwarder(GMAIL_AUTH_PASS, '   ')).toBe(false);
+    // match against an empty/missing envelope-from.
+    expect(verifyForwarder('owner@example.com', '')).toBe(false);
+    expect(verifyForwarder('owner@example.com', '   ')).toBe(false);
   });
 });
 
@@ -242,8 +179,8 @@ describe('email() handler', () => {
     const { env, kv } = makeEnv();
     const message = makeMessage({
       raw: loadFixture('disney-signin.eml'),
-      headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
-      from: 'disneyplus@trx.mail2.disneyplus.com',
+      headers: {},
+      from: 'owner@example.com',
     });
 
     await worker.email!(message, env, fakeCtx());
@@ -257,15 +194,12 @@ describe('email() handler', () => {
     expect(stored.subject).toBe('Tu código de acceso único para Disney+');
   });
 
-  it('writes nothing when forwarder verification fails', async () => {
+  it('writes nothing when the envelope-from does not match the trusted forwarder', async () => {
     const { env, kv } = makeEnv();
     const message = makeMessage({
       raw: loadFixture('disney-signin.eml'),
-      headers: {
-        'Authentication-Results':
-          'mx.cloudflare.com; spf=fail smtp.mailfrom=owner@example.com',
-      },
-      from: 'owner@example.com',
+      headers: { 'x-some-header': 'v' },
+      from: 'attacker@evil.example',
       to: 'codes@example.com',
     });
     const logs: string[] = [];
@@ -281,33 +215,24 @@ describe('email() handler', () => {
     // low-traffic private Worker, aggressive logs are fine — only
     // OTP VALUES and household URL tokens are redacted).
     const skip = logs.find((l) => l.startsWith('skip: forwarder verification failed'));
-    expect(skip).toContain('spf=fail');
-    expect(skip).toContain('mailfrom=owner@example.com');
-    expect(skip).toContain('configured-forwarder=owner@example.com');
-    expect(skip).toContain('envelope-from=owner@example.com');
-    expect(skip).toContain('envelope-to=codes@example.com');
-    expect(skip).toContain('header-names=[authentication-results]');
-    expect(skip).toContain('Authentication-Results="mx.cloudflare.com');
-  });
-
-  it('writes nothing when the Authentication-Results header is missing', async () => {
-    const { env, kv } = makeEnv();
-    const message = makeMessage({
-      raw: loadFixture('disney-signin.eml'),
-      headers: {},
-    });
-
-    await worker.email!(message, env, fakeCtx());
-
-    expect(kv.puts).toHaveLength(0);
+    // Envelope fields are JSON.stringify'd in the log to prevent a
+    // malformed SMTP envelope (containing whitespace or newlines) from
+    // fragmenting the structured log line.
+    expect(skip).toContain('envelope-from="attacker@evil.example"');
+    expect(skip).toContain('envelope-to="codes@example.com"');
+    expect(skip).toContain('configured-forwarder="owner@example.com"');
+    expect(skip).toContain('normalized-from="attacker@evil.example"');
+    expect(skip).toContain('normalized-configured="owner@example.com"');
+    expect(skip).toContain('matched=false');
+    expect(skip).toContain('header-names=[x-some-header]');
   });
 
   it('writes nothing when no parser pattern matches (unknown sender)', async () => {
     const { env, kv } = makeEnv();
     const message = makeMessage({
       raw: loadFixture('random-newsletter.eml'),
-      headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
-      from: 'newsletter@example.org',
+      headers: {},
+      from: 'owner@example.com',
     });
 
     await worker.email!(message, env, fakeCtx());
@@ -327,8 +252,8 @@ describe('email() handler', () => {
     };
     const message = makeMessage({
       raw: loadFixture('disney-signin.eml'),
-      headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
-      from: 'disneyplus@trx.mail2.disneyplus.com',
+      headers: {},
+      from: 'owner@example.com',
     });
     const logs: string[] = [];
     vi.mocked(console.log).mockImplementation((msg: string) => {
@@ -353,8 +278,8 @@ describe('email() handler', () => {
     };
     const message = makeMessage({
       raw: loadFixture('disney-signin.eml'),
-      headers: { 'Authentication-Results': GMAIL_AUTH_PASS },
-      from: 'disneyplus@trx.mail2.disneyplus.com',
+      headers: {},
+      from: 'owner@example.com',
     });
     const logs: string[] = [];
     vi.mocked(console.log).mockImplementation((msg: string) => {
