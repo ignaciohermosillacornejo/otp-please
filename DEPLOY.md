@@ -46,7 +46,10 @@ runs in production. For email-handler changes, unit tests (which drive
 1. Branch: `git checkout -b <type>/<slug>`. **Do not edit on `main`.**
 2. Write the change + tests. Keep coverage ~100% on `src/index.ts`
    (the email handler is the load-bearing path).
-3. `npm test && npx tsc --noEmit` — both must be green.
+3. `npm test && npm run typecheck` — both must be green. (The
+   `typecheck` script runs `tsc --noEmit` against both
+   `tsconfig.json` and `tsconfig.test.json`, so type errors in tests
+   are caught too.)
 4. Push, open a PR. The `.github/workflows/claude-review.yml` action
    will run AI review; if the repo owner opens it, auto-approve +
    auto-merge fire after the review comments land.
@@ -54,7 +57,7 @@ runs in production. For email-handler changes, unit tests (which drive
 6. **Deploy manually** (there is no post-merge deploy workflow):
 
    ```sh
-   git checkout main && git pull
+   git checkout main && git pull --ff-only
    npx wrangler deploy
    ```
 
@@ -126,12 +129,16 @@ re-read the JSDoc on `verifyForwarder` in `src/index.ts`.
   URL token are ever redacted. Do not dial this back "for safety" —
   the owner has explicitly chosen this tradeoff, and diagnosing a
   parser-drift bug without it is painful.
-- **Gmail canonical-form drift.** The owner's envelope-from alternates
-  between `hermosillaignacio@` and `hermosilla.ignacio@` forms. If a
-  forward ever stops flowing, check the Email Routing Activity tab for
-  the current envelope — if it's shifted to a form outside the
-  configured dot-normalization (e.g. a `+alias` tag), update
-  `TRUSTED_FORWARDER`.
+- **Gmail canonical-form drift.** Gmail treats `john.doe@gmail.com`
+  and `johndoe@gmail.com` as the same mailbox, and outbound mail can
+  be stamped with either canonical form depending on how the account
+  was provisioned. `normalizeAddress` in `src/index.ts` strips dots
+  from Gmail/googlemail local-parts on both sides of the comparison
+  so that drift doesn't break verification. If a forward ever stops
+  flowing, check the Email Routing Activity tab for the current
+  envelope-from — if it's shifted to a form outside dot-normalization
+  (e.g. a `+alias` tag), update the `TRUSTED_FORWARDER` secret to
+  match.
 - **`wrangler dev` cannot exercise the email handler.** It has no
   `ForwardableEmailMessage` shim. Trust the unit tests and deploy to
   production to smoke-test real mail flow.
