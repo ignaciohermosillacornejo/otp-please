@@ -361,8 +361,10 @@ describe('matchEmail — manually forwarded emails (Gmail Forward button)', () =
     );
   });
 
-  it('extracts the inner Disney+ From from a Spanish-localized "Mensaje reenviado" block and matches the code', () => {
-    // Gmail localizes the forward marker per account UI language.
+  it('extracts the inner Disney+ sender from a Spanish Gmail forward (De: + Mensaje reenviado, no English headers at all)', () => {
+    // Gmail localizes BOTH the marker AND the header keys per the
+    // account's UI language. A real Spanish forward contains only
+    // "De:" — no "From:" anywhere — so the regex must accept either.
     const parsed: ParsedEmail = {
       from: 'Family Member <family@gmail.com>',
       subject: 'Fwd: Tu código de acceso único para Disney+',
@@ -370,8 +372,9 @@ describe('matchEmail — manually forwarded emails (Gmail Forward button)', () =
         '',
         '---------- Mensaje reenviado ---------',
         'De: Disney+ <disneyplus@trx.mail2.disneyplus.com>',
-        'From: Disney+ <disneyplus@trx.mail2.disneyplus.com>',
+        'Fecha: vie, 27 mar 2026 a las 16:03',
         'Asunto: Tu código de acceso único para Disney+',
+        'Para: <codes@example.com>',
         '',
         'Tu código de verificación es 887766. Expira en 15 minutos.',
       ].join('\n'),

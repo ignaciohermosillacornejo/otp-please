@@ -214,9 +214,15 @@ function selectBody(parsed: ParsedEmail): string {
 function extractForwardedFrom(body: string): string | null {
   const fwdMatch = body.match(/-+\s*(?:Forwarded message|Mensaje reenviado)\s*-+/i);
   if (!fwdMatch || fwdMatch.index === undefined) return null;
-  // Look for "From: ... <addr>" within 500 chars after the marker.
+  // Look for "From:" (English Gmail) or "De:" (Spanish Gmail) within
+  // 500 chars after the marker. Gmail localizes the header key per
+  // the account's UI language, so supporting both keeps us aligned
+  // with the localized "Forwarded message" / "Mensaje reenviado"
+  // marker variants above.
   const tail = body.slice(fwdMatch.index, fwdMatch.index + 500);
-  const fromMatch = tail.match(/^From:\s*(?:[^<\n]*?<)?([^<>\s\n,]+@[^<>\s\n,]+)/im);
+  const fromMatch = tail.match(
+    /^(?:From|De):\s*(?:[^<\n]*?<)?([^<>\s\n,]+@[^<>\s\n,]+)/im,
+  );
   return fromMatch ? normalizeFrom(fromMatch[1]) : null;
 }
 

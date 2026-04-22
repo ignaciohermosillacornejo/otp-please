@@ -146,12 +146,18 @@ export default {
 
     const match = matchEmail(normalized);
     if (!match) {
-      // Subject and parsed from are safe to log here: we've already
-      // confirmed the message was forwarded by the trusted party, so
-      // parsed.from is the original streaming-service sender (e.g.
-      // info@account.netflix.com), not the forwarder's Gmail address.
+      // Log only the sender DOMAIN, not the full address. With
+      // manual-forward support, the outer `from` on a no-match can
+      // be a family member's personal Gmail (`foo@gmail.com`) —
+      // logging that verbatim would leak PII into Worker logs and
+      // now that observability is enabled, those logs persist. The
+      // domain alone is enough to debug template/regex drift
+      // ("unknown sender from gmail.com" = manual forward, from
+      // account.netflix.com = something changed upstream).
+      const atIdx = normalized.from.lastIndexOf('@');
+      const domain = atIdx === -1 ? 'unknown' : normalized.from.slice(atIdx + 1);
       console.log(
-        `skip: no pattern matched for "${normalized.subject}" from ${normalized.from}`,
+        `skip: no pattern matched for "${normalized.subject}" from @${domain}`,
       );
       return;
     }
