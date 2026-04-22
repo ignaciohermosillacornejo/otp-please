@@ -1,9 +1,5 @@
 # otp-please
 
-<p align="center">
-  <img src="docs/images/whatsapp-pain.jpg" alt="WhatsApp chat: a Disney+ sign-in prompt begging for a code, a censored message about a VPN that's 'now working', a censored impatient follow-up, an increasingly anxious doge sticker, and my attempt to change the subject by asking about padel" width="320">
-</p>
-
 "¿Me pasas el código?"
 
 Again. Every streaming service, every new TV, every family trip — someone signs in, a six-digit OTP lands in my Gmail, and I'm apparently the SMTP-to-WhatsApp gateway. The SLA on "your mother reading out six digits" is, it turns out, bad.
