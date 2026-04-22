@@ -1,30 +1,25 @@
-# otp-please
+# otp-please 🍿
 
 "¿Me pasas el código?"
 
-Again. Every streaming service, every new TV, every family trip — someone signs in, a six-digit OTP lands in my Gmail, and I'm apparently the SMTP-to-WhatsApp gateway. The SLA on "your mother reading out six digits" is, it turns out, bad.
+If you are the "account owner" for your family, you are also the unofficial, unpaid SMTP-to-WhatsApp gateway. Every time a guest signs in or a session expires, you’re interrupted mid-meeting (or mid-padel set) to hunt through Gmail and read out six digits.
 
-This Cloudflare Worker is the replacement. It reads the OTP emails out of Gmail, extracts the code (or, for Netflix, the household approval link), and parks them on a dashboard behind Cloudflare Access so the family can self-serve while I try to finish my padel set.
+otp-please is a serverless Sanity Defense System. It intercepts streaming service OTPs (Netflix, Disney+, Max) and "Household" approval links, extracting the signal from the noise and parking it on a secure, self-serve dashboard.
 
 <p align="center">
-  <img src="docs/images/dashboard.jpg" alt="Family Codes dashboard on a phone: Netflix household approve button (19m 54s valid), Disney+ code 284 193 (expired 5m ago, shown in red), Max code 619 027 (valid for 21m 54s). Warm paper-dark theme, system font, per-service coloured badges." width="320">
+<img src="docs/images/dashboard.jpg" alt="Family Codes dashboard screenshot" width="320">
 </p>
 
-## The SLA
+## The "Manual Middleware" SLA
 
-**Before** — codes relayed through me, manually, over WhatsApp:
+As an engineer, the manual workflow was a failure of distributed systems. This project moves the logic to the edge:
 
-- **p50 time-to-code**: ~8 minutes. *"un momento"* → hunt through Gmail → read six digits aloud → spell them again → realise they typed the wrong one → repeat.
-- **Inbound volume**: steady ~12 "¿me pasas el código?" pings a week across mother, partner, brother, houseguests, and whoever's visiting that weekend.
-- **Padel sets interrupted**: non-zero, shameful.
-
-**After** — dashboard bookmarked on every phone:
-
-- **p50 time-to-code**: however long it takes them to tap a bookmark.
-- **Inbound volume**: trending to zero. *Mi mamá* is still adjusting; the app does not ship with a fix for that.
-- **Padel sets interrupted**: zero, as God intended.
-
-*Uptime: whatever Cloudflare gives me. My mother's uptime on asking "¿ya?" three minutes after I don't reply remains 100%.*
+| Metric | **Legacy (Manual Forwarding)** | **`otp-please` (Edge Automated)** |
+| :--- | :--- | :--- |
+| **p50 Latency** | ~8 minutes (*"un momento"*...) | < 10 seconds (Total trip time) |
+| **Throughput** | Limited by your patience | Infinite (Let them sign in 100x) |
+| **Padel Sets Interrupted** | Non-zero, shameful | **Zero, as God intended** |
+| **The "Mom" Factor** | High (WhatsApp pings every 2 mins) | Residual (She's learning, bless her) |
 
 ## What it does
 
