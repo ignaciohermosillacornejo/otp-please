@@ -129,6 +129,13 @@ describe('verifyForwarder', () => {
     expect(verifyForwarder('<owner@example.com>', trusted)).toBe(true);
   });
 
+  it('accepts <angle-bracketed> TRUSTED_FORWARDER values (operator-error tolerance)', () => {
+    // If the secret is misconfigured with angle brackets, normalization
+    // strips them from both sides — so a plain envelope-from still
+    // matches an angle-bracketed configured value.
+    expect(verifyForwarder('owner@example.com', '<owner@example.com>')).toBe(true);
+  });
+
   it('matches case-insensitively on both sides', () => {
     expect(verifyForwarder('OWNER@example.com', 'owner@Example.COM')).toBe(true);
   });
@@ -208,11 +215,14 @@ describe('email() handler', () => {
     // low-traffic private Worker, aggressive logs are fine — only
     // OTP VALUES and household URL tokens are redacted).
     const skip = logs.find((l) => l.startsWith('skip: forwarder verification failed'));
-    expect(skip).toContain('envelope-from=attacker@evil.example');
-    expect(skip).toContain('envelope-to=codes@example.com');
-    expect(skip).toContain('configured-forwarder=owner@example.com');
-    expect(skip).toContain('normalized-from=attacker@evil.example');
-    expect(skip).toContain('normalized-configured=owner@example.com');
+    // Envelope fields are JSON.stringify'd in the log to prevent a
+    // malformed SMTP envelope (containing whitespace or newlines) from
+    // fragmenting the structured log line.
+    expect(skip).toContain('envelope-from="attacker@evil.example"');
+    expect(skip).toContain('envelope-to="codes@example.com"');
+    expect(skip).toContain('configured-forwarder="owner@example.com"');
+    expect(skip).toContain('normalized-from="attacker@evil.example"');
+    expect(skip).toContain('normalized-configured="owner@example.com"');
     expect(skip).toContain('matched=false');
     expect(skip).toContain('header-names=[x-some-header]');
   });

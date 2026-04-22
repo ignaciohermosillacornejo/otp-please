@@ -70,15 +70,14 @@ export function verifyForwarder(
 /**
  * Lowercase, trim surrounding whitespace, strip a single layer of
  * angle brackets, and — for gmail.com / googlemail.com addresses —
- * remove dots from the local-part. Used for smtp.mailfrom values
+ * remove dots from the local-part. Used for envelope-from values
  * (sometimes `<a@b>`) and the configured TRUSTED_FORWARDER value.
  *
  * Gmail dot normalization: Google treats `foo.bar@gmail.com` and
- * `foobar@gmail.com` as the same mailbox. Outbound SPF stamps the
- * envelope with whichever canonical form the account uses, which may
- * differ from the form the deployer configured in TRUSTED_FORWARDER.
- * Stripping dots on both sides makes the comparison correct for any
- * variant of a Gmail address.
+ * `foobar@gmail.com` as the same mailbox. The owner's envelope-from
+ * alternates between canonical forms (e.g. with vs. without dots), so
+ * stripping dots on both sides before comparison makes the check
+ * correct for any variant of a Gmail address.
  */
 function normalizeAddress(value: string): string {
   const bare = value.trim().replace(/^<|>$/g, '').trim().toLowerCase();
@@ -113,10 +112,11 @@ export default {
       for (const name of message.headers.keys()) names.push(name);
       console.log(
         `skip: forwarder verification failed` +
-          ` envelope-from=${message.from} envelope-to=${message.to}` +
-          ` configured-forwarder=${env.TRUSTED_FORWARDER}` +
-          ` normalized-from=${normalizeAddress(message.from ?? '')}` +
-          ` normalized-configured=${normalizeAddress(env.TRUSTED_FORWARDER)}` +
+          ` envelope-from=${JSON.stringify(message.from)}` +
+          ` envelope-to=${JSON.stringify(message.to)}` +
+          ` configured-forwarder=${JSON.stringify(env.TRUSTED_FORWARDER)}` +
+          ` normalized-from=${JSON.stringify(normalizeAddress(message.from))}` +
+          ` normalized-configured=${JSON.stringify(normalizeAddress(env.TRUSTED_FORWARDER))}` +
           ` matched=false` +
           ` header-names=[${names.join(',')}]`,
       );
