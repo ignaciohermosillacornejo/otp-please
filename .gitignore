@@ -9,5 +9,9 @@ dist/
 coverage/
 *.log
 .DS_Store
-# Per-project Claude settings — never commit
-.claude/
+# Per-user Claude Code settings stay local; the shared project config
+# (.claude/settings.json) IS committed so every teammate — and every
+# fresh Claude session — picks up the same enabled plugins (e.g. the
+# Cloudflare plugin bundle) without manual setup.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
