@@ -94,7 +94,21 @@ describe('renderDashboard — structure and ordering', () => {
     const html = renderDashboard(defaultData({ title: 'My Codes' }));
     expect(html.startsWith('<!DOCTYPE html>')).toBe(true);
     expect(html).toContain('<title>My Codes</title>');
-    expect(html).toContain('<h1 class="text-2xl font-bold">My Codes</h1>');
+    // Header <h1> carries the title text — specific class list may
+    // evolve with the design, but the title must appear there.
+    expect(html).toMatch(/<h1[^>]*>My Codes<\/h1>/);
+  });
+
+  it('carries the warm-paper-dark background and theme-color', () => {
+    const html = renderDashboard(defaultData());
+    expect(html).toContain('bg-[oklch(0.18_0.008_55)]');
+    expect(html).toContain('<meta name="theme-color" content="#1a1714">');
+  });
+
+  it('renders the LIVE eyebrow and CODES section label', () => {
+    const html = renderDashboard(defaultData());
+    expect(html).toMatch(/>live</);
+    expect(html).toMatch(/>codes</);
   });
 
   it('includes a widened 300-second meta refresh as a JS-dead fallback', () => {
@@ -141,7 +155,7 @@ describe('renderDashboard — structure and ordering', () => {
 });
 
 describe('renderDashboard — code entries', () => {
-  it('renders the code as data-code and as visible text, with countdown and received-ago spans', () => {
+  it('renders the code as data-code, splits digits in the visible text, and emits countdown + received spans', () => {
     const entries = emptyEntries();
     entries.max = {
       type: 'code',
@@ -154,12 +168,12 @@ describe('renderDashboard — code entries', () => {
 
     const html = renderDashboard(defaultData({ entries }));
 
-    // Tap-to-copy button has the code as both data-code and body text.
+    // Tap-to-copy button carries the raw code in data-code + aria-label.
     expect(html).toContain('data-code="123456"');
+    expect(html).toContain('aria-label="Copy code 123456"');
     expect(html).toContain('onclick="copy(this)"');
-    // The digit string appears in the visible <button> body (plus the
-    // data-code attribute — two occurrences is fine).
-    expect(html.match(/123456/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    // Visible digit string is split into two 3-digit groups for readability.
+    expect(html).toContain('>123 456<');
 
     // data-valid-until + data-received-at expose ISO strings to the client tick().
     expect(html).toContain(`data-valid-until="${VALID_UNTIL_FIVE_MIN}"`);
@@ -171,7 +185,7 @@ describe('renderDashboard — code entries', () => {
     expect(html).toContain('received 3m ago');
   });
 
-  it('initial text flips to "expired" for a past valid_until and applies the red class', () => {
+  it('initial text flips to "expired" for a past valid_until and styles it in the alert color', () => {
     const entries = emptyEntries();
     entries.disney = {
       type: 'code',
@@ -184,8 +198,11 @@ describe('renderDashboard — code entries', () => {
 
     const html = renderDashboard(defaultData({ entries }));
     expect(html).toContain('expired 1m ago');
-    // The countdown span gets text-red-500 when expired.
-    expect(html).toMatch(/data-valid-until="[^"]+"[^>]*text-red-500/);
+    // The countdown span gets the alert-red oklch color + font-medium
+    // weight bump when expired.
+    expect(html).toMatch(
+      /data-valid-until="[^"]+"[^>]*font-medium[^>]*style="color:oklch\(0\.72 0\.14 28\)"/,
+    );
   });
 
   it('does not render a copy button for an empty entry', () => {
@@ -237,29 +254,31 @@ describe('renderDashboard — household entries', () => {
 });
 
 describe('renderDashboard — empty states', () => {
-  it('renders "no recent code" for disney and max (household has its own empty copy)', () => {
+  it('renders the "you’ll see it here" sub-line for disney and max; netflix-household has its own copy', () => {
     const html = renderDashboard(defaultData());
     // Scope to <main>: the client-side SERVICE_META mirror in the
-    // inline <script> also contains these emptyMessage strings, which
-    // are correct code (used when polling replaces an entry-populated
-    // card with an empty one), not rendered cards.
+    // inline <script> also contains these empty strings (used when
+    // polling replaces an entry-populated card with an empty one).
     const mainStart = html.indexOf('<main');
     const mainEnd = html.indexOf('</main>');
     const body = html.slice(mainStart, mainEnd);
-    // "no recent code" appears for disney and max. Netflix (household)
-    // uses "no household request pending" instead.
-    expect(body.match(/no recent code/g)?.length).toBe(2);
+    // The Disney+/Max empty sub appears for those two cards.
+    expect(body.match(/you’ll see it here when it arrives/g)?.length).toBe(2);
+    // Netflix (household) gets its own copy.
     expect(body).toContain('no household request pending');
   });
 
-  it('renders "no household request pending" for netflix-household with null entry', () => {
+  it('renders empty cards as a border-only row (no filled card background)', () => {
     const html = renderDashboard(defaultData());
-    expect(html).toContain('no household request pending');
-  });
-
-  it('applies a greyed-out class (opacity-50) to empty cards', () => {
-    const html = renderDashboard(defaultData());
-    expect(html).toContain('opacity-50');
+    // Empty cards use `border border-stone-800/70` without the
+    // filled-card `bg-[oklch(0.22_0.012_55)]` chip background. A
+    // populated card's data-code appears only inside a button — absent
+    // here, so no code button should be rendered.
+    const mainStart = html.indexOf('<main');
+    const mainEnd = html.indexOf('</main>');
+    const body = html.slice(mainStart, mainEnd);
+    expect(body).toContain('border-stone-800/70');
+    expect(body).not.toContain('data-code=');
   });
 });
 
