@@ -64,6 +64,13 @@ const page = `<!DOCTYPE html>
 </body>
 </html>`;
 
-mkdirSync('/tmp/otp-preview/shots', { recursive: true });
+// Create the output dir this script actually writes into. A caller
+// who wants to turn the HTML into an image is responsible for
+// pointing their screenshot tool wherever they like — e.g.:
+//   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+//     --headless=new --disable-gpu --force-device-scale-factor=2 \
+//     --window-size=500,240 --screenshot=/tmp/otp-preview/shots/card.png \
+//     file:///tmp/otp-preview/card.html
+mkdirSync('/tmp/otp-preview', { recursive: true });
 writeFileSync('/tmp/otp-preview/card.html', page);
 console.log('wrote /tmp/otp-preview/card.html');
