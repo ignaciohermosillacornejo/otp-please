@@ -31,8 +31,50 @@ export const KV_KEY_PREFIX = 'entry:';
 
 // One hour grace period after `valid_until`. The dashboard wants to
 // render "expired Nm ago" for a while before the row silently vanishes,
-// so KV's expirationTtl is pushed out past the semantic expiry.
+// so KV's expirationTtl is pushed out past the semantic expiry. The
+// same constant is used at the Worker boundary by filterStaleEntries
+// as a belt against KV's eventual-consistency TTL — we don't want to
+// render "expired 600m ago" if a stale entry outlives its TTL briefly.
 export const ONE_HOUR_SECONDS = 3600;
+
+/**
+ * Returns true iff the entry is still worth showing — it either has
+ * time left on its validity window, or it expired less than one hour
+ * ago (the grace window where the dashboard still surfaces "expired
+ * Nm ago"). Entries past the grace window are treated as absent.
+ *
+ * Pure, deterministic: tests pin `now` and assert the boundary.
+ */
+export function isEntryFresh(
+  entry: StoredEntry | null,
+  now: Date,
+): boolean {
+  if (!entry) return false;
+  // A malformed valid_until (e.g. KV corruption) makes Date.parse
+  // return NaN; `(x - NaN) <= ONE_HOUR_SECONDS` is false, so a bad
+  // entry filters out rather than lingering forever. Safe failure mode.
+  const untilMs = Date.parse(entry.valid_until);
+  const elapsedSec = (now.getTime() - untilMs) / 1000;
+  return elapsedSec <= ONE_HOUR_SECONDS;
+}
+
+/**
+ * Apply `isEntryFresh` across the full per-service record. Entries
+ * beyond the grace window are nulled out. Both the HTML renderer and
+ * the JSON /api endpoint route through this filter so they always
+ * agree on which entries exist.
+ */
+export function filterStaleEntries(
+  entries: Record<ServiceKey, StoredEntry | null>,
+  now: Date,
+): Record<ServiceKey, StoredEntry | null> {
+  const filtered = {} as Record<ServiceKey, StoredEntry | null>;
+  for (const service of SERVICE_KEYS) {
+    const entry = entries[service];
+    filtered[service] = isEntryFresh(entry, now) ? entry : null;
+  }
+  return filtered;
+}
 
 const SECONDS_PER_MINUTE = 60;
 

@@ -306,13 +306,17 @@ describe('fetch() handler', () => {
 
   it('GET /api returns 200 application/json with the entries Record', async () => {
     const { env, kv } = makeEnv();
-    // Seed one service to prove readAllEntries pass-through.
+    // Seed one service to prove readAllEntries pass-through. valid_until
+    // is anchored to the real wall clock so the grace-window filter
+    // in src/index.ts (drops entries more than an hour past their
+    // valid_until) doesn't rot this test as time passes.
+    const now = Date.now();
     const disneyEntry = {
       type: 'code',
       service: 'disney',
       value: '424242',
-      received_at: '2026-04-20T11:55:00.000Z',
-      valid_until: '2026-04-20T12:10:00.000Z',
+      received_at: new Date(now - 5 * 60 * 1000).toISOString(),
+      valid_until: new Date(now + 10 * 60 * 1000).toISOString(),
       subject: 'Your Disney+ sign-in code',
     };
     await kv.put('entry:disney', JSON.stringify(disneyEntry));
@@ -374,14 +378,18 @@ describe('fetch() handler', () => {
 
   it('GET / serves dashboard content for populated entries (end-to-end smoke)', async () => {
     const { env, kv } = makeEnv();
+    // valid_until anchored to now so the fetch handler's grace-window
+    // filter doesn't drop this fixture once the test clock drifts past
+    // the old hard-coded 2026-04-20 date.
+    const now = Date.now();
     await kv.put(
       'entry:max',
       JSON.stringify({
         type: 'code',
         service: 'max',
         value: '555555',
-        received_at: '2026-04-20T11:59:00.000Z',
-        valid_until: '2026-04-20T12:14:00.000Z',
+        received_at: new Date(now - 60 * 1000).toISOString(),
+        valid_until: new Date(now + 14 * 60 * 1000).toISOString(),
         subject: 'Your Max sign-in code',
       }),
     );
