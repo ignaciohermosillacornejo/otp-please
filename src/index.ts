@@ -15,8 +15,8 @@ import { matchEmail, type ParsedEmail } from './parser';
 // the dashboard being single-tenant and Access-gated.
 //
 // `img-src 'self' data:` allows inline data URLs if a future card ever
-// wants a small embedded icon; `connect-src 'self'` blocks outbound
-// fetches to third parties.
+// wants a small embedded icon. `connect-src` permits the Cloudflare
+// Insights telemetry beacon; all other outbound fetches are blocked.
 const CSP_HEADER =
   "default-src 'self'; " +
   "script-src 'self' https://cdn.tailwindcss.com https://static.cloudflareinsights.com 'unsafe-inline'; " +
