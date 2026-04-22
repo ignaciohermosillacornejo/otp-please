@@ -316,6 +316,9 @@ function renderCardHTML(service, entry) {
     const button = '<button type="button" data-code="' + escapeAttr(entry.value) + '" onclick="copy(this)" class="font-mono text-4xl tracking-widest text-gray-100 bg-gray-800 rounded-md py-4 px-3 transition-colors">' + escapeAttr(entry.value) + '</button>';
     return shell + header + button + tail;
   }
+  // Link text is Netflix-specific; if a second household-type service is
+  // added, keep this in sync with renderHouseholdCard above (the server
+  // paint) — the two copies will otherwise drift silently.
   const link = '<a href="' + escapeAttr(entry.url) + '" target="_blank" rel="noopener noreferrer" class="block text-center font-semibold text-white bg-red-700 hover:bg-red-600 rounded-md py-3 px-4 transition-colors">Approve this device on Netflix</a>';
   return shell + header + link + tail;
 }
@@ -336,7 +339,7 @@ function poll() {
     Object.keys(SERVICE_META).forEach((service) => {
       const section = document.querySelector('[data-service="' + service + '"]');
       if (!section) return;
-      const entry = data[service] || null;
+      const entry = data[service] ?? null;
       const newReceivedAt = entry ? entry.received_at : null;
       if (currentReceivedAt(section) !== newReceivedAt) {
         section.outerHTML = renderCardHTML(service, entry);
