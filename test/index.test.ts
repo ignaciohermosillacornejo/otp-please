@@ -276,19 +276,18 @@ describe('email() handler', () => {
     await worker.email!(message, env, fakeCtx());
 
     expect(kv.puts).toHaveLength(0);
-    // The skip path emits the primary rejection log. A diagnostic
-    // header-dump line is also emitted (one-shot, see src/index.ts)
-    // — allow extra diag lines but require the rejection line.
+    // The skip path emits a verbose-by-design log line with full
+    // diagnostic context (per the owner's feedback: this is a
+    // low-traffic private Worker, aggressive logs are fine — only
+    // OTP VALUES and household URL tokens are redacted).
     const skip = logs.find((l) => l.startsWith('skip: forwarder verification failed'));
-    expect(skip).toMatch(
-      /^skip: forwarder verification failed \(envelope rejected\) spf=fail mailfrom-domain=example\.com configured-domain=example\.com$/,
-    );
-    // Neither the envelope address nor the configured TRUSTED_FORWARDER
-    // local-part must appear in any log line — domain-only is intentional.
-    for (const line of logs) {
-      expect(line).not.toContain('owner@example.com');
-      expect(line).not.toContain('codes@example.com');
-    }
+    expect(skip).toContain('spf=fail');
+    expect(skip).toContain('mailfrom=owner@example.com');
+    expect(skip).toContain('configured-forwarder=owner@example.com');
+    expect(skip).toContain('envelope-from=owner@example.com');
+    expect(skip).toContain('envelope-to=codes@example.com');
+    expect(skip).toContain('header-names=[authentication-results]');
+    expect(skip).toContain('Authentication-Results="mx.cloudflare.com');
   });
 
   it('writes nothing when the Authentication-Results header is missing', async () => {
