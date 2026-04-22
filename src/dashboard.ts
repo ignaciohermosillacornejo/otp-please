@@ -81,6 +81,26 @@ const SERVICE_META: Record<ServiceKey, ServiceMeta> = {
 const EXPIRED_COLOR = 'oklch(0.72 0.14 28)';
 
 /**
+ * Gate a URL against the set of schemes safe to put in an `href`.
+ * Returns the URL as-is iff it parses and its protocol is `https:`,
+ * otherwise returns `"#"`.
+ *
+ * `escapeHtml` is not sufficient here: `javascript:alert(1)` contains
+ * no HTML-special characters, so it would pass escapeHtml unchanged
+ * into an href attribute and become a clickable XSS gadget. We can
+ * reach this point only if a malformed URL somehow landed in KV
+ * (parser regression, compromised trusted forwarder, etc.) — but the
+ * check is defense-in-depth, and it's cheap.
+ */
+export function safeHref(url: string): string {
+  try {
+    return new URL(url).protocol === 'https:' ? url : '#';
+  } catch {
+    return '#';
+  }
+}
+
+/**
  * Escape the five characters that matter for HTML text + double-quoted
  * attributes. Applied to every user-controlled value rendered into the
  * page (codes, URLs, subjects, title, footer text).
@@ -238,7 +258,7 @@ function renderHouseholdCard(
     `    <span class="ml-auto text-[11px] uppercase tracking-[0.14em] text-stone-500">household</span>`,
     `  </div>`,
     `  <p class="text-stone-300 text-[14px] leading-snug">Someone wants to watch from a new place.</p>`,
-    `  <a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer"`,
+    `  <a href="${escapeHtml(safeHref(entry.url))}" target="_blank" rel="noopener noreferrer"`,
     `     class="mt-1 flex items-center justify-between gap-2 rounded-[10px] px-4 py-2.5 font-medium text-[14px] text-stone-950 active:opacity-90 transition"`,
     `     style="background:${meta.accent}">`,
     `    <span>Approve on Netflix</span>`,
@@ -309,6 +329,16 @@ function escapeAttr(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+function safeHref(url) {
+  // Mirror of src/dashboard.ts safeHref — only https:// passes; anything
+  // else collapses to '#'. Used by the poll re-render path when a
+  // fresh household entry replaces an earlier one.
+  try {
+    return new URL(url).protocol === 'https:' ? url : '#';
+  } catch {
+    return '#';
+  }
 }
 function splitCode(value) {
   const v = String(value);
@@ -428,7 +458,7 @@ function renderCardHTML(service, entry) {
       '<span class="ml-auto text-[11px] uppercase tracking-[0.14em] text-stone-500">household</span>' +
     '</div>' +
     '<p class="text-stone-300 text-[14px] leading-snug">Someone wants to watch from a new place.</p>' +
-    '<a href="' + escapeAttr(entry.url) + '" target="_blank" rel="noopener noreferrer" class="mt-1 flex items-center justify-between gap-2 rounded-[10px] px-4 py-2.5 font-medium text-[14px] text-stone-950 active:opacity-90 transition" style="background:' + meta.accent + '">' +
+    '<a href="' + escapeAttr(safeHref(entry.url)) + '" target="_blank" rel="noopener noreferrer" class="mt-1 flex items-center justify-between gap-2 rounded-[10px] px-4 py-2.5 font-medium text-[14px] text-stone-950 active:opacity-90 transition" style="background:' + meta.accent + '">' +
       '<span>Approve on Netflix</span>' + EXTERNAL_LINK_SVG +
     '</a>' +
     '<div class="flex items-center justify-between pt-0.5">' +

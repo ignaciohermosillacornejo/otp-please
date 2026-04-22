@@ -50,6 +50,9 @@ export function isEntryFresh(
   now: Date,
 ): boolean {
   if (!entry) return false;
+  // A malformed valid_until (e.g. KV corruption) makes Date.parse
+  // return NaN; `(x - NaN) <= ONE_HOUR_SECONDS` is false, so a bad
+  // entry filters out rather than lingering forever. Safe failure mode.
   const untilMs = Date.parse(entry.valid_until);
   const elapsedSec = (now.getTime() - untilMs) / 1000;
   return elapsedSec <= ONE_HOUR_SECONDS;

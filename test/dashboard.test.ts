@@ -5,6 +5,7 @@ import {
   escapeHtml,
   formatCountdown,
   renderDashboard,
+  safeHref,
   type DashboardData,
 } from '../src/dashboard';
 import type { StoredEntry } from '../src/kv';
@@ -66,6 +67,73 @@ describe('escapeHtml', () => {
 
   it('leaves a plain ASCII string unchanged', () => {
     expect(escapeHtml('hello world 1234')).toBe('hello world 1234');
+  });
+});
+
+describe('safeHref', () => {
+  it('passes https:// URLs through unchanged', () => {
+    expect(safeHref('https://www.netflix.com/account/travel/token')).toBe(
+      'https://www.netflix.com/account/travel/token',
+    );
+  });
+
+  it('collapses javascript: URLs to "#"', () => {
+    expect(safeHref('javascript:alert(1)')).toBe('#');
+  });
+
+  it('collapses data: URLs to "#"', () => {
+    expect(safeHref('data:text/html,<script>alert(1)</script>')).toBe('#');
+  });
+
+  it('collapses http:// URLs to "#" (household links are always https)', () => {
+    expect(safeHref('http://www.netflix.com/account/travel/token')).toBe('#');
+  });
+
+  it('collapses malformed URLs to "#"', () => {
+    expect(safeHref('not a url')).toBe('#');
+    expect(safeHref('')).toBe('#');
+  });
+
+  it('collapses a URL with https-prefix-in-path but different scheme', () => {
+    // Trailing-colon trick: some naive string checks pass this. URL parses
+    // it as protocol `x-https:` (no, it rejects); ensure we don't match it.
+    expect(safeHref('x-https:evil')).toBe('#');
+  });
+});
+
+describe('renderHouseholdCard URL safety', () => {
+  const buildHtml = (url: string): string => {
+    const entries: Record<ServiceKey, StoredEntry | null> = {
+      'netflix-household': {
+        type: 'household',
+        service: 'netflix-household',
+        url,
+        received_at: RECEIVED_JUST_NOW,
+        valid_until: VALID_UNTIL_FIVE_MIN,
+        subject: 'household',
+      },
+      disney: null,
+      max: null,
+    };
+    return renderDashboard(defaultData({ entries }));
+  };
+
+  it('renders href="#" for a javascript: URL so the approve button is inert', () => {
+    const html = buildHtml('javascript:alert(1)');
+    // The href carries '#' (via safeHref), not the raw javascript: string.
+    expect(html).toContain('href="#"');
+    expect(html).not.toContain('href="javascript:');
+  });
+
+  it('renders href="#" for a data: URL', () => {
+    const html = buildHtml('data:text/html,<script>x</script>');
+    expect(html).toContain('href="#"');
+    expect(html).not.toContain('href="data:');
+  });
+
+  it('preserves a genuine https:// URL (regression guard for the sanitizer)', () => {
+    const html = buildHtml('https://www.netflix.com/account/travel/AbC');
+    expect(html).toContain('href="https://www.netflix.com/account/travel/AbC"');
   });
 });
 
