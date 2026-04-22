@@ -208,12 +208,6 @@ Common failure modes and what they mean:
 - **`GET /api` returns the raw entries, including `value`/`url`.** It's behind Cloudflare Access, but a future maintainer adding a new endpoint should be aware that the JSON snapshot is not redacted.
 - **The email subject is written into `StoredEntry.subject`.** Some services personalize subjects (e.g. `"Hi Ana, your code is..."`). This is acceptable for a solo family project where the account holder controls both the KV namespace and the dashboard viewer allowlist, but don't expose the dashboard more broadly without rethinking.
 
-## Known limitations
-
-Tracked as open follow-ups:
-
-- [#7](https://github.com/ignaciohermosillacornejo/otp-please/issues/7) — **CODE_CONTEXT budget may be too small for HTML-only bodies.** HTML emails with heavy markup between the keyword and the digits can fall outside the 40-char non-digit window.
-
 ## Contributing
 
 PRs welcome. Run `npm test` (and `npm run typecheck`) before submitting. An AI review runs on every PR — see `.github/workflows/` for the CI setup, including the Claude-powered PR review and auto-merge flows. If you're adding a new service, please include a sanitized `.eml` fixture and a parser test.
