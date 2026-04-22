@@ -100,7 +100,8 @@ export const PATTERNS: readonly Pattern[] = [
     // max.com subdomain ships an OTP in practice, add it explicitly.
     senderMatch: /@([\w-]+\.)*hbomax\.com$|@max\.com$/i,
     codeRegex: codeOf(6),
-    validForMinutes: 15,
+    // Max's real email body says "This code expires in 30 minutes".
+    validForMinutes: 30,
   },
 ];
 

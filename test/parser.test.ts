@@ -37,14 +37,33 @@ describe('matchEmail — happy paths per service', () => {
 
   it('matches a Max sign-in code from a plain-text body with the alerts.hbomax.com sender', async () => {
     // Fixture is a sanitized real email: plain-text body, sender
-    // no-reply@alerts.hbomax.com. The sanitized code is 222222.
+    // no-reply@alerts.hbomax.com. The sanitized code is 222222, and
+    // Max's real body says the code expires in 30 minutes.
     const parsed = await loadFixture('max-signin.eml');
     const result = matchEmail(parsed);
     expect(result).toEqual({
       service: 'max',
       type: 'code',
       value: '222222',
-      validForMinutes: 15,
+      validForMinutes: 30,
+    });
+  });
+
+  it('matches a Max sign-in code from the post-rebrand @max.com apex sender', () => {
+    // Exercises the `@max\.com$` branch of the Max senderMatch, which
+    // was previously covered only by a null-returning negative test.
+    const parsed: ParsedEmail = {
+      from: 'Max <no-reply@max.com>',
+      subject: 'Your Max sign-in code',
+      text: 'Your verification code is 664422. This code expires in 30 minutes.',
+      html: '',
+    };
+    const result = matchEmail(parsed);
+    expect(result).toEqual({
+      service: 'max',
+      type: 'code',
+      value: '664422',
+      validForMinutes: 30,
     });
   });
 });
@@ -308,7 +327,7 @@ describe('matchEmail — direct unit tests (branch coverage)', () => {
       service: 'max',
       type: 'code',
       value: '554433',
-      validForMinutes: 15,
+      validForMinutes: 30,
     });
   });
 });
