@@ -536,6 +536,8 @@ export function renderDashboard(data: DashboardData): string {
   <meta name="theme-color" content="#1a1714">
   <meta http-equiv="refresh" content="300">
   <title>${escapeHtml(data.title)}</title>
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ignaciohermosillacornejo/otp-please/main/assets/logo.png">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ignaciohermosillacornejo/otp-please/main/assets/logo.png">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-[oklch(0.18_0.008_55)] text-stone-100 antialiased" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
