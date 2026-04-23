@@ -152,7 +152,7 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
     - **Bypass rule:** path `/healthz` — exempt from auth so uptime monitors (and Cloudflare itself) can probe it without a cookie.
     - **Session duration: 1 month (720h).** Both dials matter — raise them together, or the shorter one wins:
       - *Application session duration*: on the app itself, *Configure → Session Duration → 1 month*. This controls how long the app-hostname cookie stays valid.
-      - *Global session duration*: account-wide, under *Access controls → Access settings → Set your global session duration → 1 month*. This controls how often users are bounced back to Google to re-authenticate. Default is 24h, which would re-prompt the household every day even with the app dial at a month.
+      - *Global session duration*: account-wide, under *Access controls → Access settings → Set your global session duration → 1 month*. This controls how often users have to re-verify their email via a fresh One-Time PIN. Default is 24h, which would re-prompt the household every day even with the app dial at a month.
       The 24h default is reasonable for a corporate Access deployment; for a family OTP relay it just trains everyone to click through auth prompts. 720h is the longest Access offers.
 
 11. **Trigger a test OTP** on one of the configured services (e.g. sign out of Netflix and sign back in). In a terminal, watch the live logs:
