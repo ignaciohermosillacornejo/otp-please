@@ -147,9 +147,13 @@ No home server. No Docker. All compute runs on Cloudflare's edge.
 10. **Cloudflare Access — protect the dashboard:**
     - *Zero Trust → Access → Applications → Add an application → Self-hosted*.
     - Application domain: your Worker's hostname (either the default `otp-please.<subdomain>.workers.dev` or a custom `codes.<yourdomain>` if you mapped one).
-    - Identity provider: Google Workspace OAuth is the easiest for a family setup.
+    - Identity provider: Cloudflare's built-in **One-Time PIN** (email magic-link / six-digit code). No Google Workspace / OAuth app needed — users type their email, Cloudflare sends them a code.
     - Policy: email allowlist containing the family Gmail addresses that should be able to see the dashboard.
     - **Bypass rule:** path `/healthz` — exempt from auth so uptime monitors (and Cloudflare itself) can probe it without a cookie.
+    - **Session duration: 1 month (720h).** Both dials matter — raise them together, or the shorter one wins:
+      - *Application session duration*: on the app itself, *Configure → Session Duration → 1 month*. This controls how long the app-hostname cookie stays valid.
+      - *Global session duration*: account-wide, under *Access controls → Access settings → Set your global session duration → 1 month*. This controls how often users have to re-verify their email via a fresh One-Time PIN. Default is 24h, which would re-prompt the household every day even with the app dial at a month.
+      The 24h default is reasonable for a corporate Access deployment; for a family OTP relay it just trains everyone to click through auth prompts. 720h is the longest Access offers.
 
 11. **Trigger a test OTP** on one of the configured services (e.g. sign out of Netflix and sign back in). In a terminal, watch the live logs:
     ```bash
